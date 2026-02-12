@@ -260,588 +260,338 @@
   </div>
 
   <script>
-    // ============================
-    // URL load: ?src= (preferred), fallback ?data=
-    // ============================
-    function fromBase64Url(b64url) {
-      let b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
-      while (b64.length % 4) b64 += "=";
-      return atob(b64);
-    }
+  // ============================
+  // URL load: ?src= (preferred JS), fallback ?data=
+  // ============================
+  function fromBase64Url(b64url) {
+    let b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    return atob(b64);
+  }
 
-    async function loadPayload() {
-      const params = new URLSearchParams(location.search);
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[m]));
+  }
 
-      const src = params.get("src");
-      if (src) {
-        const res = await fetch(src, { cache: "no-store" });
-        if (!res.ok) throw new Error("No se pudo cargar el JSON (src).");
-        return await res.json();
-      }
+  function money(p, c){ return `${p}${c || "€"}`; }
 
-      const data = params.get("data");
-      if (data) {
-        try {
-          return JSON.parse(fromBase64Url(data));
-        } catch {
-          throw new Error("No pude decodificar el JSON de la URL (data).");
+  function showError(msg) {
+    const error = document.getElementById("error");
+    error.classList.remove("hidden");
+    error.textContent = msg;
+  }
+
+  // Carga payload desde <script src="..."> (NO necesita CORS)
+  function loadPayloadFromScript(src) {
+    return new Promise((resolve, reject) => {
+      // limpiar de cargas anteriores
+      delete window.__MKSTORE__;
+      delete window.__MKSTORE_UPDATED_AT;
+
+      const s = document.createElement("script");
+      s.async = true;
+
+      // cache-bust para evitar caché agresiva
+      const u = new URL(src);
+      u.searchParams.set("_t", Date.now().toString());
+      s.src = u.toString();
+
+      const timeout = setTimeout(() => {
+        s.remove();
+        reject(new Error("Timeout cargando src (mkstore.js)."));
+      }, 9000);
+
+      s.onload = () => {
+        clearTimeout(timeout);
+        s.remove();
+        if (!window.__MKSTORE__) {
+          reject(new Error("El src cargó pero no definió window.__MKSTORE__. (Asegúrate de subir mkstore.js)"));
+          return;
         }
+        resolve(window.__MKSTORE__);
+      };
+
+      s.onerror = () => {
+        clearTimeout(timeout);
+        s.remove();
+        reject(new Error("No se pudo cargar el src (mkstore.js). Revisa si el link caducó o no es público."));
+      };
+
+      document.head.appendChild(s);
+    });
+  }
+
+  async function loadPayload() {
+    const params = new URLSearchParams(location.search);
+    const src = params.get("src");
+
+    // ✅ NUEVO: src debe ser mkstore.js generado por el bot
+    if (src) {
+      return await loadPayloadFromScript(src);
+    }
+
+    // fallback antiguo: data= base64url
+    const data = params.get("data");
+    if (data) {
+      try {
+        return JSON.parse(fromBase64Url(data));
+      } catch {
+        throw new Error("No pude decodificar el JSON de la URL (data).");
       }
-
-      throw new Error("No hay datos. Abre MK Store desde el botón de Discord.");
     }
 
-    // ============================
-    // Helpers
-    // ============================
-    function esc(s) {
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-      }[m]));
-    }
+    throw new Error("No hay datos. Abre MK Store desde el botón de Discord.");
+  }
 
-    function money(p, c){ return `${p}${c || "€"}`; }
+  // ============================
+  // UI (tu UI actual, sin tocar diseño)
+  // ============================
+  const state = {
+    raw: [],
+    categories: [],
+    selectedCat: "all"
+  };
 
-    function normalizePayload(data) {
-      const items = Array.isArray(data?.items) ? data.items : [];
-      const cats = Array.isArray(data?.categories) ? data.categories : [];
-      const shop = data?.shop || {};
-
-      // Build maps for labels
-      const groupMap = {};
-      for (const g of cats) {
-        const values = Array.isArray(g?.values) ? g.values : [];
-        const map = {};
-        for (const v of values) map[String(v.id)] = String(v.name || v.id);
-        groupMap[String(g.group)] = {
-          title: String(g.title || g.group),
-          values,
-          map
-        };
-      }
-
-      return { items, cats, shop, groupMap };
-    }
-
-    // ============================
-    // State
-    // ============================
-    const state = {
-      raw: [],
-      shop: {},
-      groupMap: {},
-
-      // filters
-      q: "",
-      sort: "featured",
-      rarity: "all",
-      type: "all",
-      subtype: "all"
-    };
-
-    // ============================
-    // UI builders
-    // ============================
-    function rarityTagClass(r) {
-      if (r === "comun") return "tag-comun";
-      if (r === "raro") return "tag-raro";
-      if (r === "epico") return "tag-epico";
-      if (r === "legendario") return "tag-legendario";
-      return "tag-comun";
-    }
-
-    function pill(html, cls="") {
-      return `<span class="px-2.5 py-1 rounded-full text-xs border ${cls}">${html}</span>`;
-    }
-
-    function stockBadge(st) {
-      if (st > 0) {
-        return `<span class="px-2.5 py-1 rounded-full text-xs bg-emerald-500/12 border border-emerald-400/25 text-emerald-200">
-          🟢 Stock ${esc(st)}
-        </span>`;
-      }
-      return `<span class="px-2.5 py-1 rounded-full text-xs bg-rose-500/12 border border-rose-400/25 text-rose-200">
-        🔴 Sin stock
+  function stockBadge(st) {
+    if (st > 0) {
+      return `<span class="px-2.5 py-1 rounded-full text-xs bg-emerald-500/15 border border-emerald-400/25 text-emerald-200">
+        🟢 Stock ${st}
       </span>`;
     }
+    return `<span class="px-2.5 py-1 rounded-full text-xs bg-rose-500/15 border border-rose-400/25 text-rose-200">
+      🔴 Sin stock
+    </span>`;
+  }
 
-    function card(item) {
-      const img = item.i
-        ? `<img src="${esc(item.i)}" class="h-44 w-full object-cover" loading="lazy" />`
-        : `<div class="h-44 w-full flex items-center justify-center text-slate-500">Sin imagen</div>`;
+  function catPill(name) {
+    if (!name) return "";
+    return `<span class="px-2.5 py-1 rounded-full text-xs bg-sky-500/10 border border-sky-400/20 text-sky-200">🏷️ ${esc(name)}</span>`;
+  }
 
-      const dim = (item.st || 0) <= 0 ? "opacity-60" : "";
-      const hover = "hover:border-violet-500/35 hover:translate-y-[-1px]";
+  function card(item) {
+    const img = item.i
+      ? `<img src="${esc(item.i)}" class="h-44 w-full object-cover" loading="lazy" />`
+      : `<div class="h-44 w-full flex items-center justify-center text-slate-500">Sin imagen</div>`;
 
-      const rarityLabel = state.groupMap?.rarity?.map?.[String(item.r)] || item.r || "—";
-      const typeLabel = state.groupMap?.type?.map?.[String(item.t)] || item.t || "—";
-      const subLabel = state.groupMap?.subtype?.map?.[String(item.st2)] || item.st2 || "";
+    const dim = item.st <= 0 ? "opacity-60" : "";
+    const hover = "hover:border-violet-500/35 hover:translate-y-[-1px]";
 
-      const rarityP = pill(`🎖️ ${esc(rarityLabel)}`, `softRing ${rarityTagClass(String(item.r))}`);
-      const typeP = pill(`🧩 ${esc(typeLabel)}`, "softRing tag-type");
-      const subP = item.t === "uso_rapido" && item.st2 ? pill(`🧷 ${esc(subLabel)}`, "softRing tag-sub") : "";
-
-      return `
-        <button data-id="${esc(item.id)}"
-          class="relative text-left rounded-3xl overflow-hidden glass border border-slate-800/70 cardGlow transition ${hover} ${dim}">
-          <div class="bg-slate-900/40 border-b border-slate-800/70">${img}</div>
-
-          <div class="p-4">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <div class="text-lg font-extrabold leading-tight">${esc(item.n)}</div>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  ${stockBadge(item.st || 0)}
-                  ${rarityP}
-                  ${typeP}
-                  ${subP}
-                </div>
-              </div>
-
-              <div class="text-right">
-                <div class="text-violet-200 font-extrabold text-lg">${esc(money(item.p, item.c))}</div>
-                <div class="text-xs text-slate-500 mt-1">#${esc(item.id)}</div>
+    return `
+      <button data-id="${esc(item.id)}"
+        class="text-left rounded-3xl overflow-hidden glass border border-slate-800/70 cardGlow transition ${hover} ${dim}">
+        <div class="bg-slate-900/40 border-b border-slate-800/70">${img}</div>
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-lg font-extrabold leading-tight">${esc(item.n)}</div>
+              <div class="mt-2 flex flex-wrap gap-2">
+                ${stockBadge(item.st)}
+                ${catPill(item.cn)}
               </div>
             </div>
-
-            <p class="mt-3 text-sm text-slate-300 leading-relaxed min-h-[44px]">
-              ${esc(item.d || "Sin descripción.")}
-            </p>
-          </div>
-        </button>
-      `;
-    }
-
-    function skeletonCards() {
-      const wrap = document.getElementById("loading");
-      const one = `
-        <div class="rounded-3xl overflow-hidden glass border border-slate-800/70 cardGlow">
-          <div class="h-44 skeleton"></div>
-          <div class="p-4">
-            <div class="h-5 w-2/3 skeleton rounded-lg"></div>
-            <div class="mt-3 flex gap-2">
-              <div class="h-7 w-24 skeleton rounded-full"></div>
-              <div class="h-7 w-24 skeleton rounded-full"></div>
+            <div class="text-right">
+              <div class="text-violet-200 font-extrabold text-lg">${esc(money(item.p, item.c))}</div>
+              <div class="text-xs text-slate-500 mt-1">#${esc(item.id)}</div>
             </div>
-            <div class="mt-4 h-4 w-full skeleton rounded-lg"></div>
-            <div class="mt-2 h-4 w-5/6 skeleton rounded-lg"></div>
           </div>
+          <p class="mt-3 text-sm text-slate-300 leading-relaxed min-h-[44px]">
+            ${esc(item.d || "Sin descripción.")}
+          </p>
         </div>
-      `;
-      wrap.innerHTML = Array.from({length: 9}).map(() => one).join("");
+      </button>
+    `;
+  }
+
+  function sortItems(items, mode) {
+    const arr = [...items];
+    if (mode === "featured") {
+      arr.sort((a,b) => (b.st||0) - (a.st||0) || (a.n||"").localeCompare(b.n||""));
     }
+    if (mode === "name_asc") arr.sort((a,b) => (a.n||"").localeCompare(b.n||""));
+    if (mode === "price_asc") arr.sort((a,b) => (a.p||0) - (b.p||0));
+    if (mode === "price_desc") arr.sort((a,b) => (b.p||0) - (a.p||0));
+    if (mode === "stock_desc") arr.sort((a,b) => (b.st||0) - (a.st||0));
+    return arr;
+  }
 
-    function sortItems(items, mode) {
-      const arr = [...items];
-      if (mode === "featured") {
-        // stock desc, then rarity weight, then name
-        const weight = { legendario: 4, epico: 3, raro: 2, comun: 1 };
-        arr.sort((a,b) =>
-          (b.st||0) - (a.st||0) ||
-          (weight[String(b.r)]||0) - (weight[String(a.r)]||0) ||
-          (a.n||"").localeCompare(b.n||"")
-        );
-      }
-      if (mode === "name_asc") arr.sort((a,b) => (a.n||"").localeCompare(b.n||""));
-      if (mode === "price_asc") arr.sort((a,b) => (a.p||0) - (b.p||0));
-      if (mode === "price_desc") arr.sort((a,b) => (b.p||0) - (a.p||0));
-      if (mode === "stock_desc") arr.sort((a,b) => (b.st||0) - (a.st||0));
-      return arr;
-    }
+  function buildCategoriesUI() {
+    const catList = document.getElementById("catList");
+    const mobile = document.getElementById("mobileCat");
 
-    function applyFilters(items) {
-      const q = state.q.trim().toLowerCase();
-      let out = items;
+    const cats = state.categories || [];
+    const allBtn = `
+      <button data-cat="all" class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/40 hover:border-violet-500/35 transition text-left">
+        <div class="font-bold">Todas</div>
+        <div class="text-xs text-slate-400 mt-0.5">Ver todo el catálogo</div>
+      </button>
+    `;
 
-      if (state.rarity !== "all") out = out.filter(it => String(it.r||"") === String(state.rarity));
-      if (state.type !== "all") out = out.filter(it => String(it.t||"") === String(state.type));
+    catList.innerHTML = allBtn + cats.map(c => `
+      <button data-cat="${esc(String(c.id))}" class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/30 hover:border-violet-500/35 transition text-left">
+        <div class="font-bold">${esc(c.n)}</div>
+        <div class="text-xs text-slate-500 mt-0.5">#${esc(c.id)} • ${esc(c.s)}</div>
+      </button>
+    `).join("");
 
-      // subtype only applies to uso_rapido
-      if (state.subtype !== "all") {
-        out = out.filter(it => String(it.t) === "uso_rapido" && String(it.st2||"") === String(state.subtype));
-      }
+    mobile.innerHTML = `
+      <option value="all">Todas</option>
+      ${cats.map(c => `<option value="${esc(String(c.id))}">${esc(c.n)}</option>`).join("")}
+    `;
 
-      if (q) {
-        out = out.filter(it =>
-          (it.n || "").toLowerCase().includes(q) ||
-          (it.d || "").toLowerCase().includes(q) ||
-          (String(it.r||"")).toLowerCase().includes(q) ||
-          (String(it.t||"")).toLowerCase().includes(q) ||
-          (String(it.st2||"")).toLowerCase().includes(q)
-        );
-      }
-
-      return sortItems(out, state.sort);
-    }
-
-    function updateCounters(view) {
-      const inStock = view.filter(x => (x.st || 0) > 0).length;
-      const outStock = view.length - inStock;
-      document.getElementById("count").textContent = view.length;
-      document.getElementById("inStock").textContent = inStock;
-      document.getElementById("outStock").textContent = outStock;
-    }
-
-    function setSelectOptions(selectEl, values, placeholder) {
-      selectEl.innerHTML = `
-        <option value="all">${esc(placeholder)}</option>
-        ${values.map(v => `<option value="${esc(String(v.id))}">${esc(String(v.name || v.id))}</option>`).join("")}
-      `;
-    }
-
-    function buildFilterUI(groupMap) {
-      const rarityVals = groupMap?.rarity?.values || [];
-      const typeVals = groupMap?.type?.values || [];
-      const subVals = groupMap?.subtype?.values || [];
-
-      setSelectOptions(document.getElementById("fRarity"), rarityVals, "Todas");
-      setSelectOptions(document.getElementById("fType"), typeVals, "Todos");
-      setSelectOptions(document.getElementById("fSubtype"), subVals, "Todas");
-
-      // sidebar buttons (desktop)
-      const sideR = document.getElementById("sideRarity");
-      const sideT = document.getElementById("sideType");
-      const sideS = document.getElementById("sideSubtype");
-
-      function btn(group, v) {
-        const title = esc(String(v.name || v.id));
-        return `
-          <button data-group="${esc(group)}" data-id="${esc(String(v.id))}"
-            class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/30 hover:border-violet-500/35 transition text-left">
-            <div class="font-bold">${title}</div>
-            <div class="text-xs text-slate-500 mt-0.5">#${esc(String(v.id))}</div>
-          </button>
-        `;
-      }
-
-      sideR.innerHTML = `
-        <button data-group="rarity" data-id="all"
-          class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/40 hover:border-violet-500/35 transition text-left">
-          <div class="font-bold">Todas</div>
-          <div class="text-xs text-slate-500 mt-0.5">Ver todas las calidades</div>
-        </button>
-        ${rarityVals.map(v => btn("rarity", v)).join("")}
-      `;
-
-      sideT.innerHTML = `
-        <button data-group="type" data-id="all"
-          class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/40 hover:border-violet-500/35 transition text-left">
-          <div class="font-bold">Todos</div>
-          <div class="text-xs text-slate-500 mt-0.5">Ver todos los tipos</div>
-        </button>
-        ${typeVals.map(v => btn("type", v)).join("")}
-      `;
-
-      sideS.innerHTML = `
-        <button data-group="subtype" data-id="all"
-          class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/40 hover:border-violet-500/35 transition text-left">
-          <div class="font-bold">Todas</div>
-          <div class="text-xs text-slate-500 mt-0.5">Ver todo uso rápido</div>
-        </button>
-        ${subVals.map(v => btn("subtype", v)).join("")}
-      `;
-
-      function updateSidebarActive() {
-        for (const el of document.querySelectorAll("aside button[data-group]")) {
-          const g = el.getAttribute("data-group");
-          const id = el.getAttribute("data-id");
-          const active =
-            (g === "rarity" && String(state.rarity) === String(id)) ||
-            (g === "type" && String(state.type) === String(id)) ||
-            (g === "subtype" && String(state.subtype) === String(id));
-          el.classList.toggle("border-violet-500/55", active);
-          el.classList.toggle("bg-violet-600/10", active);
-        }
-
-        // show subtype only when type is uso_rapido
-        const wrap = document.getElementById("sideSubtypeWrap");
-        wrap.classList.toggle("opacity-40", state.type !== "uso_rapido" && state.subtype === "all");
-      }
-
-      document.querySelector("aside").addEventListener("click", (e) => {
-        const btnEl = e.target.closest("button[data-group]");
-        if (!btnEl) return;
-        const g = btnEl.getAttribute("data-group");
-        const id = btnEl.getAttribute("data-id");
-
-        if (g === "rarity") state.rarity = id;
-        if (g === "type") {
-          state.type = id;
-          // if leaving uso_rapido, reset subtype
-          if (state.type !== "uso_rapido") state.subtype = "all";
-        }
-        if (g === "subtype") {
-          state.subtype = id;
-          // forcing subtype implies type uso_rapido
-          if (state.subtype !== "all") state.type = "uso_rapido";
-        }
-
-        syncSelects();
-        updateChips();
-        updateSidebarActive();
-        render();
+    function highlight() {
+      const buttons = catList.querySelectorAll("button[data-cat]");
+      buttons.forEach(b => {
+        const active = b.getAttribute("data-cat") === String(state.selectedCat);
+        b.classList.toggle("border-violet-500/55", active);
+        b.classList.toggle("bg-violet-600/10", active);
       });
-
-      document.getElementById("clearSidebar").addEventListener("click", () => {
-        state.rarity = "all";
-        state.type = "all";
-        state.subtype = "all";
-        syncSelects();
-        updateChips();
-        updateSidebarActive();
-        render();
-      });
-
-      updateSidebarActive();
+      mobile.value = String(state.selectedCat);
     }
 
-    function syncSelects() {
-      document.getElementById("fRarity").value = String(state.rarity);
-      document.getElementById("fType").value = String(state.type);
-      document.getElementById("fSubtype").value = String(state.subtype);
-
-      // disable subtype if not uso_rapido
-      document.getElementById("fSubtype").disabled = (state.type !== "uso_rapido");
-      document.getElementById("fSubtype").classList.toggle("opacity-50", state.type !== "uso_rapido");
-    }
-
-    function updateChips() {
-      const wrap = document.getElementById("activeChips");
-      const chips = [];
-
-      const rLabel = state.groupMap?.rarity?.map?.[String(state.rarity)];
-      const tLabel = state.groupMap?.type?.map?.[String(state.type)];
-      const sLabel = state.groupMap?.subtype?.map?.[String(state.subtype)];
-
-      if (state.rarity !== "all") {
-        chips.push({
-          key: "rarity",
-          text: `🎖️ ${rLabel || state.rarity}`,
-          cls: `softRing ${rarityTagClass(String(state.rarity))}`
-        });
-      }
-      if (state.type !== "all") {
-        chips.push({
-          key: "type",
-          text: `🧩 ${tLabel || state.type}`,
-          cls: "softRing tag-type"
-        });
-      }
-      if (state.subtype !== "all") {
-        chips.push({
-          key: "subtype",
-          text: `🧷 ${sLabel || state.subtype}`,
-          cls: "softRing tag-sub"
-        });
-      }
-
-      if (!chips.length) {
-        wrap.innerHTML = `<span class="text-xs text-slate-500">Sin filtros (mostrando todo)</span>`;
-        return;
-      }
-
-      wrap.innerHTML = chips.map(c => `
-        <button data-chip="${esc(c.key)}"
-          class="px-3 py-1.5 rounded-full text-xs border hover:opacity-90 ${esc(c.cls)}">
-          ${esc(c.text)} <span class="opacity-70 ml-1">✕</span>
-        </button>
-      `).join("");
-
-      wrap.querySelectorAll("button[data-chip]").forEach(b => {
-        b.addEventListener("click", () => {
-          const k = b.getAttribute("data-chip");
-          if (k === "rarity") state.rarity = "all";
-          if (k === "type") { state.type = "all"; state.subtype = "all"; }
-          if (k === "subtype") state.subtype = "all";
-          syncSelects();
-          updateChips();
-          render();
-        });
-      });
-    }
-
-    // ============================
-    // Render
-    // ============================
-    function render() {
-      const grid = document.getElementById("grid");
-      const empty = document.getElementById("empty");
-
-      const view = applyFilters(state.raw);
-      updateCounters(view);
-
-      if (!view.length) {
-        grid.innerHTML = "";
-        empty.classList.remove("hidden");
-        return;
-      }
-      empty.classList.add("hidden");
-      grid.innerHTML = view.map(card).join("");
-
-      grid.querySelectorAll("button[data-id]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = Number(btn.getAttribute("data-id"));
-          const it = state.raw.find(x => Number(x.id) === id);
-          if (it) openModal(it);
-        });
-      });
-    }
-
-    // ============================
-    // Modal
-    // ============================
-    const modal = document.getElementById("modal");
-
-    function openModal(it) {
-      const rarityLabel = state.groupMap?.rarity?.map?.[String(it.r)] || it.r || "—";
-      const typeLabel = state.groupMap?.type?.map?.[String(it.t)] || it.t || "—";
-      const subLabel = state.groupMap?.subtype?.map?.[String(it.st2)] || it.st2 || "";
-
-      document.getElementById("mTitle").textContent = it.n || "Item";
-      document.getElementById("mMeta").textContent =
-        `🎖️ ${rarityLabel} • 🧩 ${typeLabel}` + (it.t === "uso_rapido" && it.st2 ? ` • 🧷 ${subLabel}` : "");
-      document.getElementById("mPrice").textContent = money(it.p, it.c);
-      document.getElementById("mStock").innerHTML = (it.st || 0) > 0
-        ? `<span class="text-emerald-200">🟢 Stock ${esc(it.st)}</span>`
-        : `<span class="text-rose-200">🔴 Sin stock</span>`;
-      document.getElementById("mDesc").textContent = it.d || "Sin descripción.";
-      document.getElementById("mId").textContent = String(it.id);
-
-      const wrap = document.getElementById("mImgWrap");
-      wrap.innerHTML = it.i
-        ? `<img src="${esc(it.i)}" class="w-full h-72 object-cover" loading="lazy" />`
-        : `<div class="w-full h-72 flex items-center justify-center text-slate-500">Sin imagen</div>`;
-
-      modal.classList.remove("hidden");
-    }
-
-    function closeModal() { modal.classList.add("hidden"); }
-    document.getElementById("mClose").addEventListener("click", closeModal);
-    document.getElementById("mClose2").addEventListener("click", closeModal);
-    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-    window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-
-    document.getElementById("mCopy").addEventListener("click", async () => {
-      const name = document.getElementById("mTitle").textContent;
-      try {
-        await navigator.clipboard.writeText(name);
-        const btn = document.getElementById("mCopy");
-        btn.textContent = "Copiado ✅";
-        setTimeout(() => btn.textContent = "Copiar nombre", 900);
-      } catch {}
+    catList.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-cat]");
+      if (!btn) return;
+      state.selectedCat = btn.getAttribute("data-cat");
+      highlight();
+      render();
     });
 
-    // ============================
-    // Boot
-    // ============================
-    function showError(msg) {
-      const error = document.getElementById("error");
-      error.classList.remove("hidden");
-      error.textContent = msg;
+    mobile.addEventListener("change", () => {
+      state.selectedCat = mobile.value;
+      highlight();
+      render();
+    });
+
+    document.getElementById("clearCat").addEventListener("click", () => {
+      state.selectedCat = "all";
+      highlight();
+      render();
+    });
+
+    highlight();
+  }
+
+  function applyFilters(items) {
+    const q = document.getElementById("search").value.trim().toLowerCase();
+    const sort = document.getElementById("sort").value;
+
+    let out = items;
+
+    if (state.selectedCat !== "all") {
+      const catId = Number(state.selectedCat);
+      out = out.filter(it => Number(it.cat || 0) === catId);
     }
 
-    function setLoaded() {
-      document.getElementById("loading").classList.add("hidden");
-      document.getElementById("grid").classList.remove("hidden");
+    if (q) {
+      out = out.filter(it =>
+        (it.n || "").toLowerCase().includes(q) ||
+        (it.d || "").toLowerCase().includes(q) ||
+        (it.cn || "").toLowerCase().includes(q)
+      );
     }
 
-    (async function init() {
-      skeletonCards();
+    out = sortItems(out, sort);
+    return out;
+  }
 
-      try {
-        const payload = await loadPayload();
-        const { items, shop, groupMap } = normalizePayload(payload);
+  function updateCounters(view) {
+    const inStock = view.filter(x => (x.st || 0) > 0).length;
+    const outStock = view.length - inStock;
+    document.getElementById("count").textContent = view.length;
+    document.getElementById("inStock").textContent = inStock;
+    document.getElementById("outStock").textContent = outStock;
+  }
 
-        // Apply base
-        state.raw = items;
-        state.shop = shop;
-        state.groupMap = groupMap;
+  function render() {
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
 
-        document.getElementById("title").textContent = "MK Store";
-        document.getElementById("subtitle").textContent = shop?.subtitle || "Gaming catalog • stock en vivo";
+    const view = applyFilters(state.raw);
+    updateCounters(view);
 
-        if (shop?.guild) {
-          const pill = document.getElementById("pillGuild");
-          pill.textContent = `Servidor: ${shop.guild}`;
-          pill.classList.remove("hidden");
-        }
+    if (!view.length) {
+      grid.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
 
-        // updated pill (if the JSON includes updatedAt in future, it will show)
-        if (payload?.updatedAt) {
-          const p = document.getElementById("pillUpdated");
-          p.textContent = `Actualizado: ${String(payload.updatedAt).slice(0, 19).replace("T", " ")}`;
-          p.classList.remove("hidden");
-        }
+    empty.classList.add("hidden");
+    grid.innerHTML = view.map(card).join("");
 
-        // Build filters
-        buildFilterUI(groupMap);
+    grid.querySelectorAll("button[data-id]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.getAttribute("data-id"));
+        const it = state.raw.find(x => Number(x.id) === id);
+        if (it) openModal(it);
+      });
+    });
+  }
 
-        // wire inputs
-        document.getElementById("search").addEventListener("input", () => {
-          state.q = document.getElementById("search").value;
-          updateChips();
-          render();
-        });
+  // Modal
+  const modal = document.getElementById("modal");
+  function openModal(it) {
+    document.getElementById("mTitle").textContent = it.n || "Item";
+    document.getElementById("mCat").textContent = it.cn ? `Categoría: ${it.cn}` : "Categoría: —";
+    document.getElementById("mPrice").textContent = money(it.p, it.c);
+    document.getElementById("mStock").innerHTML = it.st > 0
+      ? `<span class="text-emerald-200">🟢 Stock ${esc(it.st)}</span>`
+      : `<span class="text-rose-200">🔴 Sin stock</span>`;
+    document.getElementById("mDesc").textContent = it.d || "Sin descripción.";
+    document.getElementById("mId").textContent = String(it.id);
 
-        document.getElementById("sort").addEventListener("change", () => {
-          state.sort = document.getElementById("sort").value;
-          render();
-        });
+    const wrap = document.getElementById("mImgWrap");
+    wrap.innerHTML = it.i
+      ? `<img src="${esc(it.i)}" class="w-full h-72 object-cover" loading="lazy" />`
+      : `<div class="w-full h-72 flex items-center justify-center text-slate-500">Sin imagen</div>`;
 
-        // selects
-        document.getElementById("fRarity").addEventListener("change", () => {
-          state.rarity = document.getElementById("fRarity").value;
-          syncSelects();
-          updateChips();
-          render();
-        });
+    modal.classList.remove("hidden");
+  }
 
-        document.getElementById("fType").addEventListener("change", () => {
-          state.type = document.getElementById("fType").value;
-          if (state.type !== "uso_rapido") state.subtype = "all";
-          syncSelects();
-          updateChips();
-          render();
-        });
+  function closeModal() { modal.classList.add("hidden"); }
+  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("mClose2").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
-        document.getElementById("fSubtype").addEventListener("change", () => {
-          state.subtype = document.getElementById("fSubtype").value;
-          if (state.subtype !== "all") state.type = "uso_rapido";
-          syncSelects();
-          updateChips();
-          render();
-        });
+  document.getElementById("mCopy").addEventListener("click", async () => {
+    const name = document.getElementById("mTitle").textContent;
+    try {
+      await navigator.clipboard.writeText(name);
+      document.getElementById("mCopy").textContent = "Copiado ✅";
+      setTimeout(() => document.getElementById("mCopy").textContent = "Copiar nombre", 900);
+    } catch {}
+  });
 
-        document.getElementById("clearAll").addEventListener("click", () => {
-          state.q = "";
-          state.sort = "featured";
-          state.rarity = "all";
-          state.type = "all";
-          state.subtype = "all";
-          document.getElementById("search").value = "";
-          document.getElementById("sort").value = "featured";
-          syncSelects();
-          updateChips();
-          render();
-        });
+  // Boot
+  (async function init() {
+    try {
+      const data = await loadPayload();
 
-        // initial
-        state.q = "";
-        state.sort = document.getElementById("sort").value || "featured";
-        syncSelects();
-        updateChips();
+      document.getElementById("title").textContent = "MK Store";
+      document.getElementById("subtitle").textContent = data.shop?.subtitle || "Gaming catalog • stock en vivo";
 
-        setLoaded();
-        render();
-
-      } catch (err) {
-        const msg = String(err?.message || err || "Error desconocido.");
-        showError(msg);
-        document.getElementById("pillLive").textContent = "Offline";
-        document.getElementById("pillLive").className =
-          "px-3 py-1 rounded-full bg-rose-600/15 border border-rose-500/25 text-rose-200";
+      if (data.shop?.guild) {
+        const pill = document.getElementById("pillGuild");
+        pill.textContent = `Servidor: ${data.shop.guild}`;
+        pill.classList.remove("hidden");
       }
-    })();
-  </script>
+
+      // ✅ OJO: con src= (mkstore.js) el payload viene en window.__MKSTORE__
+      // Aquí ya lo tenemos en "data"
+      state.categories = Array.isArray(data.categories) ? data.categories : [];
+      state.raw = Array.isArray(data.items) ? data.items : [];
+
+      buildCategoriesUI();
+      document.getElementById("search").addEventListener("input", render);
+      document.getElementById("sort").addEventListener("change", render);
+      render();
+
+    } catch (err) {
+      showError(String(err?.message || err || "Error desconocido."));
+    }
+  })();
+</script>
 </body>
 </html>
