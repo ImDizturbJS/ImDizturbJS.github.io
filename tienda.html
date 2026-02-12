@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arc Raiders Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Toque gaming */
+    .glass { background: rgba(17, 24, 39, 0.55); backdrop-filter: blur(12px); }
+    .neon { box-shadow: 0 0 0 1px rgba(99,102,241,.35), 0 0 40px rgba(99,102,241,.18); }
+    .grid-bg {
+      background-image:
+        radial-gradient(rgba(99,102,241,.18) 1px, transparent 1px);
+      background-size: 22px 22px;
+      background-position: 0 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 bg-slate-950 grid-bg">
+
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 id="title" class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+          Arc Raiders Store
+        </h1>
+        <p id="subtitle" class="text-slate-300 mt-2">
+          Catálogo profesional estilo gaming.
+        </p>
+      </div>
+
+      <div class="flex gap-3 w-full sm:w-auto">
+        <div class="w-full sm:w-80">
+          <label class="text-xs text-slate-400">Buscar</label>
+          <input id="search" placeholder="Ej: skin, boost, coins..."
+                 class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="w-40">
+          <label class="text-xs text-slate-400">Orden</label>
+          <select id="sort"
+                  class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="name_asc">Nombre (A-Z)</option>
+            <option value="price_asc">Precio (↑)</option>
+            <option value="price_desc">Precio (↓)</option>
+            <option value="stock_desc">Stock (↓)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info bar -->
+    <div class="mt-6 p-4 rounded-2xl glass neon border border-slate-800">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div class="text-sm text-slate-300">
+          <span class="text-slate-400">Items cargados:</span>
+          <span id="count" class="font-semibold text-slate-100">0</span>
+        </div>
+        <div class="text-xs text-slate-400">
+          Tip: comparte este link para enseñar tu tienda.
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="hidden mt-6 p-4 rounded-2xl bg-red-950/50 border border-red-800 text-red-200"></div>
+
+    <!-- Cards grid -->
+    <div id="grid" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <footer class="mt-12 text-center text-xs text-slate-500">
+      Powered by GitHub Pages • Tailwind CDN • Store Viewer
+    </footer>
+  </div>
+
+  <script>
+    function fromBase64Url(b64url) {
+      // b64url -> b64
+      let b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+      // pad
+      while (b64.length % 4) b64 += "=";
+      const json = atob(b64);
+      return json;
+    }
+
+    function getDataFromUrl() {
+      const params = new URLSearchParams(location.search);
+      const data = params.get("data");
+      if (!data) return null;
+
+      try {
+        const json = fromBase64Url(data);
+        return JSON.parse(json);
+      } catch (e) {
+        return { __error: "No pude decodificar el JSON de la URL. Link inválido o demasiado largo." };
+      }
+    }
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    function badgeStock(stock) {
+      if (stock > 0) {
+        return `<span class="px-2 py-1 text-xs rounded-lg bg-emerald-500/15 text-emerald-200 border border-emerald-400/30">
+          🟢 Stock: <b>${stock}</b>
+        </span>`;
+      }
+      return `<span class="px-2 py-1 text-xs rounded-lg bg-rose-500/15 text-rose-200 border border-rose-400/30">
+        🔴 Sin stock
+      </span>`;
+    }
+
+    function card(item) {
+      const img = item.i
+        ? `<img src="${esc(item.i)}" class="h-44 w-full object-cover rounded-xl border border-slate-800" loading="lazy" />`
+        : `<div class="h-44 w-full rounded-xl border border-slate-800 bg-slate-900/60 flex items-center justify-center text-slate-500">
+            Sin imagen
+          </div>`;
+
+      const price = `<span class="text-indigo-200 font-semibold">${esc(item.p)}${esc(item.c || "€")}</span>`;
+
+      return `
+        <div class="rounded-2xl glass neon border border-slate-800 p-4 hover:border-indigo-500/40 transition">
+          ${img}
+          <div class="mt-4 flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold leading-tight">${esc(item.n)}</h3>
+            <div class="text-right">${price}</div>
+          </div>
+          <div class="mt-2 flex items-center justify-between">
+            ${badgeStock(item.s)}
+            <span class="text-xs text-slate-500">#${esc(item.id)}</span>
+          </div>
+          <p class="mt-3 text-sm text-slate-300 min-h-[44px]">
+            ${esc(item.d || "Sin descripción.")}
+          </p>
+        </div>
+      `;
+    }
+
+    function sortItems(items, mode) {
+      const arr = [...items];
+      if (mode === "name_asc") arr.sort((a,b) => (a.n||"").localeCompare(b.n||""));
+      if (mode === "price_asc") arr.sort((a,b) => (a.p||0) - (b.p||0));
+      if (mode === "price_desc") arr.sort((a,b) => (b.p||0) - (a.p||0));
+      if (mode === "stock_desc") arr.sort((a,b) => (b.s||0) - (a.s||0));
+      return arr;
+    }
+
+    const state = {
+      raw: [],
+      view: []
+    };
+
+    function render() {
+      const grid = document.getElementById("grid");
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const sort = document.getElementById("sort").value;
+
+      let items = state.raw;
+
+      if (q) {
+        items = items.filter(it =>
+          (it.n || "").toLowerCase().includes(q) ||
+          (it.d || "").toLowerCase().includes(q)
+        );
+      }
+
+      items = sortItems(items, sort);
+
+      document.getElementById("count").textContent = items.length;
+      grid.innerHTML = items.map(card).join("");
+    }
+
+    // Boot
+    (function init() {
+      const data = getDataFromUrl();
+      const error = document.getElementById("error");
+
+      if (!data) {
+        error.classList.remove("hidden");
+        error.textContent = "No hay datos en la URL. Abre la tienda desde el botón del Discord.";
+        return;
+      }
+
+      if (data.__error) {
+        error.classList.remove("hidden");
+        error.textContent = data.__error;
+        return;
+      }
+
+      const title = data.shop?.title || "Arc Raiders Store";
+      const subtitle = data.shop?.subtitle || "Catálogo profesional estilo gaming.";
+
+      document.getElementById("title").textContent = title;
+      document.getElementById("subtitle").textContent = subtitle;
+
+      state.raw = Array.isArray(data.items) ? data.items : [];
+      document.getElementById("count").textContent = state.raw.length;
+
+      document.getElementById("search").addEventListener("input", render);
+      document.getElementById("sort").addEventListener("change", render);
+
+      render();
+    })();
+  </script>
+</body>
+</html>
