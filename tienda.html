@@ -3,96 +3,189 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arc Raiders Store</title>
+  <title>MK Store</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Toque gaming */
-    .glass { background: rgba(17, 24, 39, 0.55); backdrop-filter: blur(12px); }
-    .neon { box-shadow: 0 0 0 1px rgba(99,102,241,.35), 0 0 40px rgba(99,102,241,.18); }
-    .grid-bg {
+    :root { color-scheme: dark; }
+    .bg-grid {
       background-image:
-        radial-gradient(rgba(99,102,241,.18) 1px, transparent 1px);
-      background-size: 22px 22px;
-      background-position: 0 0;
+        radial-gradient(rgba(124,58,237,.18) 1px, transparent 1px),
+        radial-gradient(rgba(59,130,246,.12) 1px, transparent 1px);
+      background-size: 22px 22px, 44px 44px;
+      background-position: 0 0, 12px 12px;
     }
+    .glass { background: rgba(2, 6, 23, .68); backdrop-filter: blur(14px); }
+    .cardGlow { box-shadow: 0 0 0 1px rgba(124,58,237,.32), 0 18px 80px rgba(124,58,237,.12); }
+    .softRing { box-shadow: 0 0 0 1px rgba(148,163,184,.15); }
+    .fadeIn { animation: fadeIn .28s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
   </style>
 </head>
-<body class="min-h-screen text-slate-100 bg-slate-950 grid-bg">
 
-  <div class="max-w-6xl mx-auto px-4 py-10">
-    <!-- Header -->
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 id="title" class="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          Arc Raiders Store
-        </h1>
-        <p id="subtitle" class="text-slate-300 mt-2">
-          Catálogo profesional estilo gaming.
-        </p>
+<body class="min-h-screen bg-slate-950 text-slate-100 bg-grid">
+  <!-- Top glow -->
+  <div class="pointer-events-none fixed inset-x-0 -top-40 h-80 blur-3xl opacity-60"
+       style="background: radial-gradient(circle at 50% 50%, rgba(124,58,237,.55), transparent 60%);"></div>
+
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    <!-- Header / Hero -->
+    <header class="glass cardGlow rounded-3xl border border-slate-800/70 p-6 sm:p-8">
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
+              <span class="text-violet-200 font-black">MK</span>
+            </div>
+            <div>
+              <h1 id="title" class="text-3xl sm:text-4xl font-extrabold tracking-tight">MK Store</h1>
+              <p id="subtitle" class="text-slate-300 mt-1">Gaming catalog • stock en vivo</p>
+            </div>
+          </div>
+          <p class="mt-4 text-sm text-slate-400 max-w-2xl">
+            Catálogo premium estilo gaming. Filtra por categorías, busca items y revisa stock en vivo.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span id="pillGuild" class="hidden px-3 py-1 rounded-full bg-slate-900/50 border border-slate-700/60 text-slate-300"></span>
+            <span class="px-3 py-1 rounded-full bg-violet-600/15 border border-violet-500/25 text-violet-200">Live</span>
+            <span class="px-3 py-1 rounded-full bg-sky-600/12 border border-sky-500/25 text-sky-200">Pro UI</span>
+          </div>
+        </div>
+
+        <div class="w-full lg:w-[520px] flex flex-col sm:flex-row gap-3">
+          <div class="flex-1">
+            <label class="text-xs text-slate-400">Buscar</label>
+            <input id="search" placeholder="Ej: coins, boost, skin..."
+              class="mt-1 w-full px-4 py-3 rounded-2xl bg-slate-900/60 border border-slate-700/70 focus:outline-none focus:ring-2 focus:ring-violet-500/70" />
+          </div>
+
+          <div class="sm:w-44">
+            <label class="text-xs text-slate-400">Orden</label>
+            <select id="sort"
+              class="mt-1 w-full px-4 py-3 rounded-2xl bg-slate-900/60 border border-slate-700/70 focus:outline-none focus:ring-2 focus:ring-violet-500/70">
+              <option value="featured">Destacados</option>
+              <option value="name_asc">Nombre (A-Z)</option>
+              <option value="price_asc">Precio (↑)</option>
+              <option value="price_desc">Precio (↓)</option>
+              <option value="stock_desc">Stock (↓)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div class="flex gap-3 w-full sm:w-auto">
-        <div class="w-full sm:w-80">
-          <label class="text-xs text-slate-400">Buscar</label>
-          <input id="search" placeholder="Ej: skin, boost, coins..."
-                 class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <!-- mobile category -->
+      <div class="mt-6 lg:hidden">
+        <label class="text-xs text-slate-400">Categoría</label>
+        <select id="mobileCat"
+          class="mt-1 w-full px-4 py-3 rounded-2xl bg-slate-900/60 border border-slate-700/70 focus:outline-none focus:ring-2 focus:ring-violet-500/70">
+        </select>
+      </div>
+
+      <!-- info bar -->
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="rounded-2xl bg-slate-900/40 border border-slate-800/70 p-4 softRing">
+          <div class="text-xs text-slate-400">Items visibles</div>
+          <div id="count" class="text-2xl font-extrabold mt-1">0</div>
         </div>
-        <div class="w-40">
-          <label class="text-xs text-slate-400">Orden</label>
-          <select id="sort"
-                  class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900/70 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="name_asc">Nombre (A-Z)</option>
-            <option value="price_asc">Precio (↑)</option>
-            <option value="price_desc">Precio (↓)</option>
-            <option value="stock_desc">Stock (↓)</option>
-          </select>
+        <div class="rounded-2xl bg-slate-900/40 border border-slate-800/70 p-4 softRing">
+          <div class="text-xs text-slate-400">En stock</div>
+          <div id="inStock" class="text-2xl font-extrabold mt-1">0</div>
+        </div>
+        <div class="rounded-2xl bg-slate-900/40 border border-slate-800/70 p-4 softRing">
+          <div class="text-xs text-slate-400">Sin stock</div>
+          <div id="outStock" class="text-2xl font-extrabold mt-1">0</div>
         </div>
       </div>
+    </header>
+
+    <!-- Layout -->
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+      <!-- Sidebar categories -->
+      <aside class="hidden lg:block">
+        <div class="glass rounded-3xl border border-slate-800/70 p-5 cardGlow">
+          <div class="flex items-center justify-between">
+            <h2 class="font-bold">Categorías</h2>
+            <button id="clearCat" class="text-xs text-slate-300 hover:text-white">Limpiar</button>
+          </div>
+          <div id="catList" class="mt-4 space-y-2"></div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main>
+        <div id="error" class="hidden rounded-2xl bg-rose-950/40 border border-rose-800/60 p-4 text-rose-200"></div>
+        <div id="grid" class="mt-0 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+
+        <div id="empty" class="hidden mt-8 glass rounded-3xl border border-slate-800/70 p-10 text-center cardGlow">
+          <div class="text-xl font-extrabold">No hay resultados</div>
+          <div class="text-slate-400 mt-2">Prueba a cambiar categoría, búsqueda u orden.</div>
+        </div>
+      </main>
     </div>
-
-    <!-- Info bar -->
-    <div class="mt-6 p-4 rounded-2xl glass neon border border-slate-800">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div class="text-sm text-slate-300">
-          <span class="text-slate-400">Items cargados:</span>
-          <span id="count" class="font-semibold text-slate-100">0</span>
-        </div>
-        <div class="text-xs text-slate-400">
-          Tip: comparte este link para enseñar tu tienda.
-        </div>
-      </div>
-    </div>
-
-    <!-- Error -->
-    <div id="error" class="hidden mt-6 p-4 rounded-2xl bg-red-950/50 border border-red-800 text-red-200"></div>
-
-    <!-- Cards grid -->
-    <div id="grid" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
     <footer class="mt-12 text-center text-xs text-slate-500">
-      Powered by GitHub Pages • Tailwind CDN • Store Viewer
+      MK Store • GitHub Pages • Tailwind CDN
     </footer>
   </div>
 
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/70"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="w-full max-w-3xl glass rounded-3xl border border-slate-800/70 cardGlow overflow-hidden fadeIn">
+        <div class="flex items-center justify-between p-5 border-b border-slate-800/70">
+          <div>
+            <div id="mTitle" class="text-xl font-extrabold">Item</div>
+            <div id="mCat" class="text-xs text-slate-400 mt-1"></div>
+          </div>
+          <button id="mClose" class="px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/70 hover:border-slate-500/70">✕</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+          <div class="p-5">
+            <div id="mImgWrap" class="rounded-2xl overflow-hidden border border-slate-800/70 bg-slate-900/40">
+              <!-- image injected -->
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center justify-between">
+              <div id="mPrice" class="text-2xl font-extrabold text-violet-200"></div>
+              <div id="mStock" class="text-sm"></div>
+            </div>
+            <p id="mDesc" class="mt-4 text-slate-300 leading-relaxed"></p>
+
+            <div class="mt-6 flex gap-3">
+              <button id="mCopy" class="flex-1 px-4 py-3 rounded-2xl bg-violet-600/20 border border-violet-500/30 hover:bg-violet-600/30">
+                Copiar nombre
+              </button>
+              <button id="mClose2" class="px-4 py-3 rounded-2xl bg-slate-900/60 border border-slate-700/70 hover:border-slate-500/70">
+                Cerrar
+              </button>
+            </div>
+
+            <div class="mt-4 text-xs text-slate-500">
+              ID: <span id="mId"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // --- Decode base64url ---
     function fromBase64Url(b64url) {
-      // b64url -> b64
       let b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
-      // pad
       while (b64.length % 4) b64 += "=";
-      const json = atob(b64);
-      return json;
+      return atob(b64);
     }
 
     function getDataFromUrl() {
       const params = new URLSearchParams(location.search);
       const data = params.get("data");
       if (!data) return null;
-
       try {
-        const json = fromBase64Url(data);
-        return JSON.parse(json);
-      } catch (e) {
+        return JSON.parse(fromBase64Url(data));
+      } catch {
         return { __error: "No pude decodificar el JSON de la URL. Link inválido o demasiado largo." };
       }
     }
@@ -103,77 +196,230 @@
       }[m]));
     }
 
-    function badgeStock(stock) {
-      if (stock > 0) {
-        return `<span class="px-2 py-1 text-xs rounded-lg bg-emerald-500/15 text-emerald-200 border border-emerald-400/30">
-          🟢 Stock: <b>${stock}</b>
+    function money(p, c){ return `${p}${c || "€"}`; }
+
+    const state = {
+      raw: [],
+      categories: [],
+      selectedCat: "all"
+    };
+
+    function stockBadge(st) {
+      if (st > 0) {
+        return `<span class="px-2.5 py-1 rounded-full text-xs bg-emerald-500/15 border border-emerald-400/25 text-emerald-200">
+          🟢 Stock ${st}
         </span>`;
       }
-      return `<span class="px-2 py-1 text-xs rounded-lg bg-rose-500/15 text-rose-200 border border-rose-400/30">
+      return `<span class="px-2.5 py-1 rounded-full text-xs bg-rose-500/15 border border-rose-400/25 text-rose-200">
         🔴 Sin stock
       </span>`;
     }
 
+    function catPill(name) {
+      if (!name) return "";
+      return `<span class="px-2.5 py-1 rounded-full text-xs bg-sky-500/10 border border-sky-400/20 text-sky-200">🏷️ ${esc(name)}</span>`;
+    }
+
     function card(item) {
       const img = item.i
-        ? `<img src="${esc(item.i)}" class="h-44 w-full object-cover rounded-xl border border-slate-800" loading="lazy" />`
-        : `<div class="h-44 w-full rounded-xl border border-slate-800 bg-slate-900/60 flex items-center justify-center text-slate-500">
-            Sin imagen
-          </div>`;
+        ? `<img src="${esc(item.i)}" class="h-44 w-full object-cover" loading="lazy" />`
+        : `<div class="h-44 w-full flex items-center justify-center text-slate-500">Sin imagen</div>`;
 
-      const price = `<span class="text-indigo-200 font-semibold">${esc(item.p)}${esc(item.c || "€")}</span>`;
+      const dim = item.st <= 0 ? "opacity-60" : "";
+      const hover = "hover:border-violet-500/35 hover:translate-y-[-1px]";
 
       return `
-        <div class="rounded-2xl glass neon border border-slate-800 p-4 hover:border-indigo-500/40 transition">
-          ${img}
-          <div class="mt-4 flex items-start justify-between gap-3">
-            <h3 class="text-lg font-bold leading-tight">${esc(item.n)}</h3>
-            <div class="text-right">${price}</div>
+        <button data-id="${esc(item.id)}"
+          class="text-left rounded-3xl overflow-hidden glass border border-slate-800/70 cardGlow transition ${hover} ${dim}">
+          <div class="bg-slate-900/40 border-b border-slate-800/70">${img}</div>
+          <div class="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-lg font-extrabold leading-tight">${esc(item.n)}</div>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  ${stockBadge(item.st)}
+                  ${catPill(item.cn)}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-violet-200 font-extrabold text-lg">${esc(money(item.p, item.c))}</div>
+                <div class="text-xs text-slate-500 mt-1">#${esc(item.id)}</div>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-slate-300 leading-relaxed min-h-[44px]">
+              ${esc(item.d || "Sin descripción.")}
+            </p>
           </div>
-          <div class="mt-2 flex items-center justify-between">
-            ${badgeStock(item.s)}
-            <span class="text-xs text-slate-500">#${esc(item.id)}</span>
-          </div>
-          <p class="mt-3 text-sm text-slate-300 min-h-[44px]">
-            ${esc(item.d || "Sin descripción.")}
-          </p>
-        </div>
+        </button>
       `;
     }
 
     function sortItems(items, mode) {
       const arr = [...items];
+      if (mode === "featured") {
+        // stock desc, luego name asc (sensación "pro")
+        arr.sort((a,b) => (b.st||0) - (a.st||0) || (a.n||"").localeCompare(b.n||""));
+      }
       if (mode === "name_asc") arr.sort((a,b) => (a.n||"").localeCompare(b.n||""));
       if (mode === "price_asc") arr.sort((a,b) => (a.p||0) - (b.p||0));
       if (mode === "price_desc") arr.sort((a,b) => (b.p||0) - (a.p||0));
-      if (mode === "stock_desc") arr.sort((a,b) => (b.s||0) - (a.s||0));
+      if (mode === "stock_desc") arr.sort((a,b) => (b.st||0) - (a.st||0));
       return arr;
     }
 
-    const state = {
-      raw: [],
-      view: []
-    };
+    function buildCategoriesUI() {
+      const catList = document.getElementById("catList");
+      const mobile = document.getElementById("mobileCat");
 
-    function render() {
-      const grid = document.getElementById("grid");
+      const cats = state.categories || [];
+      const allBtn = `
+        <button data-cat="all" class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/40 hover:border-violet-500/35 transition text-left">
+          <div class="font-bold">Todas</div>
+          <div class="text-xs text-slate-400 mt-0.5">Ver todo el catálogo</div>
+        </button>
+      `;
+
+      catList.innerHTML = allBtn + cats.map(c => `
+        <button data-cat="${esc(String(c.id))}" class="w-full px-4 py-3 rounded-2xl border border-slate-800/70 bg-slate-900/30 hover:border-violet-500/35 transition text-left">
+          <div class="font-bold">${esc(c.n)}</div>
+          <div class="text-xs text-slate-500 mt-0.5">#${esc(c.id)} • ${esc(c.s)}</div>
+        </button>
+      `).join("");
+
+      // mobile dropdown
+      mobile.innerHTML = `
+        <option value="all">Todas</option>
+        ${cats.map(c => `<option value="${esc(String(c.id))}">${esc(c.n)}</option>`).join("")}
+      `;
+
+      // active highlight
+      function highlight() {
+        const buttons = catList.querySelectorAll("button[data-cat]");
+        buttons.forEach(b => {
+          const active = b.getAttribute("data-cat") === String(state.selectedCat);
+          b.classList.toggle("border-violet-500/55", active);
+          b.classList.toggle("bg-violet-600/10", active);
+        });
+        mobile.value = String(state.selectedCat);
+      }
+
+      catList.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-cat]");
+        if (!btn) return;
+        state.selectedCat = btn.getAttribute("data-cat");
+        highlight();
+        render();
+      });
+
+      mobile.addEventListener("change", () => {
+        state.selectedCat = mobile.value;
+        highlight();
+        render();
+      });
+
+      document.getElementById("clearCat").addEventListener("click", () => {
+        state.selectedCat = "all";
+        highlight();
+        render();
+      });
+
+      highlight();
+    }
+
+    function applyFilters(items) {
       const q = document.getElementById("search").value.trim().toLowerCase();
       const sort = document.getElementById("sort").value;
 
-      let items = state.raw;
+      let out = items;
 
+      // category filter
+      if (state.selectedCat !== "all") {
+        const catId = Number(state.selectedCat);
+        out = out.filter(it => Number(it.cat || 0) === catId);
+      }
+
+      // search
       if (q) {
-        items = items.filter(it =>
+        out = out.filter(it =>
           (it.n || "").toLowerCase().includes(q) ||
-          (it.d || "").toLowerCase().includes(q)
+          (it.d || "").toLowerCase().includes(q) ||
+          (it.cn || "").toLowerCase().includes(q)
         );
       }
 
-      items = sortItems(items, sort);
-
-      document.getElementById("count").textContent = items.length;
-      grid.innerHTML = items.map(card).join("");
+      // sort
+      out = sortItems(out, sort);
+      return out;
     }
+
+    function updateCounters(view) {
+      const inStock = view.filter(x => (x.st || 0) > 0).length;
+      const outStock = view.length - inStock;
+      document.getElementById("count").textContent = view.length;
+      document.getElementById("inStock").textContent = inStock;
+      document.getElementById("outStock").textContent = outStock;
+    }
+
+    function render() {
+      const grid = document.getElementById("grid");
+      const empty = document.getElementById("empty");
+
+      const view = applyFilters(state.raw);
+      updateCounters(view);
+
+      if (!view.length) {
+        grid.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      grid.innerHTML = view.map(card).join("");
+
+      // attach modal open
+      grid.querySelectorAll("button[data-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = Number(btn.getAttribute("data-id"));
+          const it = state.raw.find(x => Number(x.id) === id);
+          if (it) openModal(it);
+        });
+      });
+    }
+
+    // Modal
+    const modal = document.getElementById("modal");
+    function openModal(it) {
+      document.getElementById("mTitle").textContent = it.n || "Item";
+      document.getElementById("mCat").textContent = it.cn ? `Categoría: ${it.cn}` : "Categoría: —";
+      document.getElementById("mPrice").textContent = money(it.p, it.c);
+      document.getElementById("mStock").innerHTML = it.st > 0
+        ? `<span class="text-emerald-200">🟢 Stock ${it.st}</span>`
+        : `<span class="text-rose-200">🔴 Sin stock</span>`;
+      document.getElementById("mDesc").textContent = it.d || "Sin descripción.";
+      document.getElementById("mId").textContent = String(it.id);
+
+      const wrap = document.getElementById("mImgWrap");
+      wrap.innerHTML = it.i
+        ? `<img src="${esc(it.i)}" class="w-full h-72 object-cover" loading="lazy" />`
+        : `<div class="w-full h-72 flex items-center justify-center text-slate-500">Sin imagen</div>`;
+
+      modal.classList.remove("hidden");
+    }
+
+    function closeModal() { modal.classList.add("hidden"); }
+    document.getElementById("mClose").addEventListener("click", closeModal);
+    document.getElementById("mClose2").addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+    window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+    document.getElementById("mCopy").addEventListener("click", async () => {
+      const name = document.getElementById("mTitle").textContent;
+      try {
+        await navigator.clipboard.writeText(name);
+        document.getElementById("mCopy").textContent = "Copiado ✅";
+        setTimeout(() => document.getElementById("mCopy").textContent = "Copiar nombre", 900);
+      } catch {}
+    });
 
     // Boot
     (function init() {
@@ -182,24 +428,29 @@
 
       if (!data) {
         error.classList.remove("hidden");
-        error.textContent = "No hay datos en la URL. Abre la tienda desde el botón del Discord.";
+        error.textContent = "No hay datos en la URL. Abre MK Store desde el botón del Discord.";
         return;
       }
-
       if (data.__error) {
         error.classList.remove("hidden");
         error.textContent = data.__error;
         return;
       }
 
-      const title = data.shop?.title || "Arc Raiders Store";
-      const subtitle = data.shop?.subtitle || "Catálogo profesional estilo gaming.";
+      // Title fixed: MK Store
+      document.getElementById("title").textContent = "MK Store";
+      document.getElementById("subtitle").textContent = data.shop?.subtitle || "Gaming catalog • stock en vivo";
 
-      document.getElementById("title").textContent = title;
-      document.getElementById("subtitle").textContent = subtitle;
+      if (data.shop?.guild) {
+        const pill = document.getElementById("pillGuild");
+        pill.textContent = `Servidor: ${data.shop.guild}`;
+        pill.classList.remove("hidden");
+      }
 
+      state.categories = Array.isArray(data.categories) ? data.categories : [];
       state.raw = Array.isArray(data.items) ? data.items : [];
-      document.getElementById("count").textContent = state.raw.length;
+
+      buildCategoriesUI();
 
       document.getElementById("search").addEventListener("input", render);
       document.getElementById("sort").addEventListener("change", render);
