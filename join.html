@@ -5,12 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>UNION • Join</title>
 
-  <link rel="icon" href="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png">
-
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
   <script>
@@ -18,11 +13,9 @@
       theme: {
         extend: {
           fontFamily: { sans: ['Montserrat', 'sans-serif'] },
-          colors: {
-            union: { DEFAULT: '#f97316', dim: '#c2410c' }
-          },
+          colors: { union: { DEFAULT: '#f97316', dim: '#c2410c' } },
           animation: {
-            'slide-in': 'slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+            'slide-in': 'slideIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
             'fade-in': 'fadeIn 0.35s ease-out forwards',
             'pulse-soft': 'pulseSoft 2.6s ease-in-out infinite',
           },
@@ -40,45 +33,23 @@
     :root { color-scheme: dark; }
     body { font-family: 'Montserrat', sans-serif; }
 
-    /* Fondo UNION / cinematic */
     .vignette {
       position: fixed; inset: 0;
-      background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.96) 100%);
-      pointer-events: none;
-      z-index: 0;
+      background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.97) 100%);
+      pointer-events: none; z-index: 0;
     }
     .grain {
-      position: fixed; inset: 0;
-      pointer-events: none;
-      z-index: 1;
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
       opacity: .08;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
       background-size: 220px 220px;
     }
-    .glow {
-      box-shadow: 0 0 35px rgba(249,115,22,0.18), 0 0 120px rgba(0,0,0,0.55);
-    }
+    .glow { box-shadow: 0 0 35px rgba(249,115,22,0.18), 0 0 120px rgba(0,0,0,0.55); }
     .hover-glow:hover { text-shadow: 0 0 18px rgba(249,115,22,0.45); }
 
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* Línea superior pro */
-    .topline {
-      background: linear-gradient(90deg, rgba(249,115,22,0.95), rgba(194,65,12,0.8), transparent);
-    }
-
-    /* Toast */
-    .toast {
-      transform: translateX(24px);
-      opacity: 0;
-    }
-    .toast.show {
-      animation: toastIn .38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .toast.hide {
-      animation: toastOut .28s cubic-bezier(0.5, 0, 0.75, 0) forwards;
-    }
+    .toast { transform: translateX(24px); opacity: 0; }
+    .toast.show { animation: toastIn .38s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .toast.hide { animation: toastOut .28s cubic-bezier(0.5, 0, 0.75, 0) forwards; }
     @keyframes toastIn { 0% { opacity: 0; transform: translateX(24px) scale(.98); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
     @keyframes toastOut { 0% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(36px) scale(.98); } }
   </style>
@@ -92,19 +63,15 @@
   <div class="vignette"></div>
   <div class="grain"></div>
 
-  <!-- Logo top-right -->
+  <!-- Logo -->
   <div class="fixed top-8 right-8 z-[55] opacity-85 pointer-events-none">
-    <img
-      src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png"
-      class="w-32 drop-shadow-md opacity-85"
-      alt="UNION"
-    />
+    <img src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png" class="w-32 drop-shadow-md opacity-85" alt="UNION" />
   </div>
 
   <!-- Toast stack -->
   <div class="fixed top-10 right-10 z-[80] flex flex-col items-end gap-3 w-[380px] pointer-events-none">
     <div id="toastTemplate" class="toast hidden relative w-full overflow-hidden bg-[#0a0a0a]/95 shadow-2xl rounded-sm border border-white/10">
-      <div class="absolute left-0 top-0 h-full w-1 topline"></div>
+      <div class="absolute left-0 top-0 h-full w-1 bg-union"></div>
       <div class="relative p-4 flex items-start gap-4">
         <div class="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent pointer-events-none"></div>
         <div id="toastIcon" class="mt-0.5 text-union"></div>
@@ -119,20 +86,13 @@
     </div>
   </div>
 
-  <!-- Main layout -->
   <main class="relative z-10 min-h-screen px-8 py-12 lg:px-20 lg:py-16">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
 
-      <!-- Left panel -->
+      <!-- Left -->
       <section class="lg:col-span-6 animate-[slide-in_0.45s_ease-out]">
         <div class="max-w-xl">
-          <div class="flex items-center gap-3">
-            <img
-              src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png"
-              class="w-64 drop-shadow-2xl opacity-95"
-              alt="UNION"
-            />
-          </div>
+          <img src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png" class="w-64 drop-shadow-2xl opacity-95" alt="UNION" />
 
           <div class="mt-4 flex items-center gap-3 pl-1">
             <div class="h-[2px] w-8 bg-union"></div>
@@ -144,77 +104,72 @@
           </h1>
 
           <p class="mt-4 text-sm text-zinc-400 leading-relaxed">
-            Esta página usa un enlace <span class="text-union font-bold">fivem://</span> para conectarte
-            automáticamente al servidor.
+            Conexión instantánea a <span class="text-union font-bold">UNION</span>.
           </p>
 
-          <!-- Warning card -->
           <div class="mt-7 rounded-lg border border-white/10 bg-zinc-950/70 p-5 glow">
             <div class="flex items-start gap-4">
               <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-union/10 text-union border border-union/20">
-                <!-- exclamation icon -->
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                 </svg>
               </div>
+
               <div class="flex-1">
                 <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">IMPORTANTE</div>
-                <div class="mt-1 text-sm font-bold text-zinc-200">Para que funcione, debes tener FiveM abierto.</div>
+                <div class="mt-1 text-sm font-bold text-zinc-200">Antes de conectar, abre FiveM.</div>
                 <div class="mt-2 text-xs text-zinc-400 leading-relaxed">
-                  Si FiveM está cerrado, tu navegador puede bloquear el enlace o no hacer nada. Abre FiveM primero y vuelve a intentarlo.
+                  Si FiveM no está abierto, el navegador puede bloquear la acción o no lanzar el cliente.
                 </div>
 
                 <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                  <a
+                  <button
                     id="joinBtn"
-                    href="fivem://connect/51.38.224.40:30120"
+                    type="button"
                     class="group inline-flex items-center justify-center gap-3 rounded-md bg-union px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-white shadow-[0_0_20px_rgba(249,115,22,0.35)] hover:bg-orange-500 transition-colors"
                   >
-                    <!-- plug icon -->
                     <svg class="w-4 h-4 opacity-90 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v6m6-6v6M5 9h14M7 9v6a5 5 0 005 5 5 5 0 005-5V9"/>
                     </svg>
                     Conectar ahora
-                  </a>
+                  </button>
+
+                  <button
+                    id="helpBtn"
+                    type="button"
+                    class="inline-flex items-center justify-center gap-3 rounded-md border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-zinc-200 hover:bg-white/10 hover:border-union/30 transition-colors"
+                  >
+                    <svg class="w-4 h-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                    </svg>
+                    Ayuda
+                  </button>
                 </div>
 
-                <div class="mt-4 flex items-center gap-3 text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                  <span class="text-zinc-600">Servidor</span>
-                  <span class="h-[1px] w-10 bg-white/10"></span>
+                <div class="mt-4 text-[10px] text-zinc-600 leading-relaxed">
+                  Si el botón no abre FiveM: abre FiveM → vuelve aquí → conecta.
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Quick help -->
-          <div class="mt-6 text-xs text-zinc-500 leading-relaxed">
-            Si el botón no abre FiveM, prueba:
-            <span class="text-zinc-300 font-semibold">1)</span> abrir FiveM,
-            <span class="text-zinc-300 font-semibold">2)</span> volver aquí,
-            <span class="text-zinc-300 font-semibold">3)</span> pulsar <span class="text-union font-bold">Conectar ahora</span>.
-          </div>
         </div>
       </section>
 
-      <!-- Right panel (status / steps) -->
+      <!-- Right -->
       <section class="lg:col-span-6 animate-[fade-in_0.5s_ease-out]">
         <div class="max-w-xl lg:ml-auto">
           <div class="rounded-lg border border-white/10 bg-zinc-950/70 p-6 glow">
-            <div class="absolute"></div>
-
             <div class="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">UNION • STATUS</div>
                 <div class="mt-1 text-2xl font-black uppercase italic text-white hover-glow">Protocolo de entrada</div>
               </div>
-
-              <span id="statusPill" class="rounded bg-union/10 px-2 py-0.5 text-[10px] font-bold uppercase text-union border border-union/20 animate-pulse-soft">
+              <span class="rounded bg-union/10 px-2 py-0.5 text-[10px] font-bold uppercase text-union border border-union/20 animate-pulse-soft">
                 READY
               </span>
             </div>
 
             <div class="mt-5 space-y-3">
-              <!-- Step card -->
               <div class="group relative overflow-hidden rounded-lg bg-black/40 border border-white/5 p-4 transition-all hover:border-union/40">
                 <div class="relative z-10 flex items-start gap-4">
                   <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-white/5 text-zinc-400 group-hover:text-union transition-colors">
@@ -226,7 +181,7 @@
                     <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Paso 01</div>
                     <div class="mt-1 font-bold text-zinc-200">Abre FiveM</div>
                     <div class="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Mantén FiveM abierto en segundo plano para que el enlace <span class="font-mono text-zinc-300">fivem://</span> se capture correctamente.
+                      FiveM debe estar abierto para capturar la conexión.
                     </div>
                   </div>
                 </div>
@@ -236,14 +191,14 @@
                 <div class="relative z-10 flex items-start gap-4">
                   <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-white/5 text-zinc-400 group-hover:text-union transition-colors">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-8 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H7L5 7v12a2 2 0 002 2z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-8 4h6"/>
                     </svg>
                   </div>
                   <div class="flex-1">
                     <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Paso 02</div>
-                    <div class="mt-1 font-bold text-zinc-200">Pulsa “Conectar ahora”</div>
+                    <div class="mt-1 font-bold text-zinc-200">Conecta</div>
                     <div class="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Tu navegador puede pedir confirmación (“abrir aplicación”). Acepta para proceder.
+                      Si el navegador pregunta “abrir aplicación”, acepta.
                     </div>
                   </div>
                 </div>
@@ -253,14 +208,14 @@
                 <div class="relative z-10 flex items-start gap-4">
                   <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-white/5 text-zinc-400 group-hover:text-union transition-colors">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/>
                     </svg>
                   </div>
                   <div class="flex-1">
                     <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Paso 03</div>
-                    <div class="mt-1 font-bold text-zinc-200">Espera la carga</div>
+                    <div class="mt-1 font-bold text-zinc-200">Carga recursos</div>
                     <div class="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Al entrar, sincroniza y carga recursos. Si se queda congelado, reintenta desde esta página.
+                      Espera a que termine la sincronización.
                     </div>
                   </div>
                 </div>
@@ -274,17 +229,10 @@
               <button id="cinematicBtn"
                 class="rounded bg-white/5 px-3 py-1.5 border border-white/10 hover:border-union/40 hover:bg-union/10 transition text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-white"
                 type="button"
-                title="Cinemática (barras negras)"
               >
                 Cinemática
               </button>
             </div>
-
-          </div>
-
-          <div class="mt-5 text-[10px] text-zinc-600 leading-relaxed">
-            Consejo: en algunos navegadores el esquema <span class="font-mono text-zinc-400">fivem://</span> funciona mejor
-            si ya lo has permitido una vez.
           </div>
         </div>
       </section>
@@ -293,7 +241,9 @@
   </main>
 
   <script>
-    const JOIN_URL = "fivem://connect/51.38.224.40:30120";
+    // ✅ No IP / no fivem:// in HTML.
+    // Se carga desde join.json (mismo directorio).
+    const JOIN_ENDPOINT = "./join.json";
 
     function toast({ title, message, type = "primary", ms = 3200 }) {
       const tpl = document.getElementById("toastTemplate");
@@ -307,7 +257,6 @@
       const m = node.querySelector("#toastMsg");
       const bar = node.querySelector("#toastBar");
 
-      // Iconos simples
       const icons = {
         primary: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>`,
         success: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`,
@@ -319,28 +268,11 @@
       t.textContent = title || "UNION";
       m.textContent = message || "";
 
-      // color line + bar
-      const map = {
-        primary: { line: "bg-union", bar: "bg-union/70", title: "text-union" },
-        success: { line: "bg-emerald-500", bar: "bg-emerald-500/70", title: "text-emerald-400" },
-        warning: { line: "bg-yellow-500", bar: "bg-yellow-500/70", title: "text-yellow-400" },
-        error: { line: "bg-red-500", bar: "bg-red-500/70", title: "text-red-400" }
-      };
-
-      const cfg = map[type] || map.primary;
-      node.querySelector(".topline")?.classList.remove("topline"); // nothing
-      // We use the left line via inline class:
-      const leftLine = node.querySelector("div.absolute.left-0");
-      leftLine.className = "absolute left-0 top-0 h-full w-1 " + cfg.line;
-
-      t.className = "text-[11px] font-black uppercase tracking-[0.25em] drop-shadow-sm " + cfg.title;
-      bar.className = "h-[2px] w-full " + cfg.bar;
-
       document.querySelector(".fixed.top-10.right-10.z-\\[80\\]").appendChild(node);
 
-      // animate bar shrink
       bar.style.transition = `transform ${ms}ms linear`;
       bar.style.transformOrigin = "left";
+
       requestAnimationFrame(() => {
         node.classList.add("show");
         bar.style.transform = "scaleX(0)";
@@ -353,34 +285,47 @@
       }, ms);
     }
 
-    // UX: try to connect + warn
+    async function getJoinUrl() {
+      // Carga dinámica (no aparece en HTML)
+      const res = await fetch(JOIN_ENDPOINT, { cache: "no-store" });
+      if (!res.ok) throw new Error("JOIN_ENDPOINT_FETCH_FAILED");
+      const data = await res.json();
+      if (!data?.url || typeof data.url !== "string") throw new Error("JOIN_URL_INVALID");
+      return data.url;
+    }
+
+    // Connect
     const joinBtn = document.getElementById("joinBtn");
-    joinBtn.addEventListener("click", () => {
+    joinBtn.addEventListener("click", async () => {
       toast({
         title: "Conexión",
-        message: "Asegúrate de tener FiveM abierto. Si aparece un aviso del navegador, acepta.",
+        message: "Asegúrate de tener FiveM abierto. Si el navegador pregunta, acepta.",
         type: "warning",
         ms: 4200
       });
-      // Let default navigation happen (fivem://)
+
+      try {
+        const url = await getJoinUrl();
+        // Disparamos conexión sin mostrar href ni preview.
+        window.location.href = url;
+      } catch (e) {
+        toast({
+          title: "Error",
+          message: "No se pudo iniciar la conexión. Revisa que join.json exista y vuelva a intentarlo.",
+          type: "error",
+          ms: 4200
+        });
+      }
     });
 
-    // Copy link
-    const copyBtn = document.getElementById("copyBtn");
-    copyBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(JOIN_URL);
-        toast({ title: "Copiado", message: "Enlace de conexión copiado al portapapeles.", type: "success" });
-      } catch (e) {
-        // fallback
-        const ta = document.createElement("textarea");
-        ta.value = JOIN_URL;
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand("copy"); } catch {}
-        ta.remove();
-        toast({ title: "Copiado", message: "Enlace copiado (modo compatibilidad).", type: "success" });
-      }
+    // Help
+    document.getElementById("helpBtn").addEventListener("click", () => {
+      toast({
+        title: "Ayuda",
+        message: "Abre FiveM → vuelve a esta pestaña → pulsa Conectar. Si el navegador bloquea, permite abrir la aplicación.",
+        type: "primary",
+        ms: 5200
+      });
     });
 
     // Cinematic toggle
@@ -393,22 +338,11 @@
       cinematic = !cinematic;
       topBar.style.height = cinematic ? "64px" : "0px";
       bottomBar.style.height = cinematic ? "64px" : "0px";
-      toast({
-        title: "Cinemática",
-        message: cinematic ? "Activada." : "Desactivada.",
-        type: "primary",
-        ms: 2200
-      });
+      toast({ title: "Cinemática", message: cinematic ? "Activada." : "Desactivada.", type: "primary", ms: 2200 });
     });
 
-    // First load hint
     window.addEventListener("load", () => {
-      toast({
-        title: "UNION",
-        message: "Tip: abre FiveM antes de pulsar Conectar.",
-        type: "primary",
-        ms: 3000
-      });
+      toast({ title: "UNION", message: "Tip: abre FiveM antes de pulsar Conectar.", type: "primary", ms: 3000 });
     });
   </script>
 </body>
