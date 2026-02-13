@@ -7,6 +7,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png">
 
   <script>
     tailwind.config = {
@@ -20,9 +21,9 @@
             'pulse-soft': 'pulseSoft 2.6s ease-in-out infinite',
           },
           keyframes: {
-            slideIn: { '0%': { transform: 'translateX(-26px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+            slideIn: { '0%': { transform: 'translateY(14px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            pulseSoft: { '0%,100%': { transform: 'scale(1)', opacity: '0.9' }, '50%': { transform: 'scale(1.01)', opacity: '1' } }
+            pulseSoft: { '0%,100%': { transform: 'scale(1)', opacity: '0.92' }, '50%': { transform: 'scale(1.01)', opacity: '1' } }
           }
         }
       }
@@ -33,43 +34,48 @@
     :root { color-scheme: dark; }
     body { font-family: 'Montserrat', sans-serif; }
 
+    /* Fondo UNION */
     .vignette {
       position: fixed; inset: 0;
-      background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.97) 100%);
+      background: radial-gradient(circle at 40% 30%, rgba(249,115,22,0.06) 0%, transparent 35%),
+                  radial-gradient(circle at 70% 65%, rgba(249,115,22,0.04) 0%, transparent 40%),
+                  radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.98) 100%);
       pointer-events: none; z-index: 0;
     }
+
     .grain {
       position: fixed; inset: 0; pointer-events: none; z-index: 1;
-      opacity: .08;
+      opacity: .07;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
       background-size: 220px 220px;
     }
-    .glow { box-shadow: 0 0 35px rgba(249,115,22,0.18), 0 0 120px rgba(0,0,0,0.55); }
-    .hover-glow:hover { text-shadow: 0 0 18px rgba(249,115,22,0.45); }
 
+    .card-glow {
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 0 35px rgba(249,115,22,0.12),
+        0 0 110px rgba(0,0,0,0.60);
+    }
+
+    .hairline {
+      background: linear-gradient(90deg, rgba(249,115,22,0.95), rgba(194,65,12,0.75), transparent);
+    }
+
+    /* Toast */
     .toast { transform: translateX(24px); opacity: 0; }
     .toast.show { animation: toastIn .38s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     .toast.hide { animation: toastOut .28s cubic-bezier(0.5, 0, 0.75, 0) forwards; }
-    @keyframes toastIn { 0% { opacity: 0; transform: translateX(24px) scale(.98); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
-    @keyframes toastOut { 0% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(36px) scale(.98); } }
+    @keyframes toastIn { 0% { opacity: 0; transform: translateX(24px) scale(.985); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes toastOut { 0% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(36px) scale(.985); } }
   </style>
 </head>
 
 <body class="min-h-screen bg-black text-white antialiased overflow-x-hidden">
-  <!-- Cinematic bars -->
-  <div class="fixed top-0 left-0 w-full h-0 bg-black z-[60] transition-all duration-700 ease-in-out" id="cinematicTop"></div>
-  <div class="fixed bottom-0 left-0 w-full h-0 bg-black z-[60] transition-all duration-700 ease-in-out" id="cinematicBottom"></div>
-
   <div class="vignette"></div>
   <div class="grain"></div>
 
-  <!-- Logo -->
-  <div class="fixed top-8 right-8 z-[55] opacity-85 pointer-events-none">
-    <img src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png" class="w-32 drop-shadow-md opacity-85" alt="UNION" />
-  </div>
-
   <!-- Toast stack -->
-  <div class="fixed top-10 right-10 z-[80] flex flex-col items-end gap-3 w-[380px] pointer-events-none">
+  <div class="fixed top-8 right-8 z-[80] flex flex-col items-end gap-3 w-[380px] pointer-events-none">
     <div id="toastTemplate" class="toast hidden relative w-full overflow-hidden bg-[#0a0a0a]/95 shadow-2xl rounded-sm border border-white/10">
       <div class="absolute left-0 top-0 h-full w-1 bg-union"></div>
       <div class="relative p-4 flex items-start gap-4">
@@ -86,163 +92,173 @@
     </div>
   </div>
 
-  <main class="relative z-10 min-h-screen px-8 py-12 lg:px-20 lg:py-16">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+  <main class="relative z-10 min-h-screen px-6 py-10 lg:px-20 lg:py-16">
+    <div class="mx-auto max-w-6xl">
 
-      <!-- Left -->
-      <section class="lg:col-span-6 animate-[slide-in_0.45s_ease-out]">
-        <div class="max-w-xl">
-          <img src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png" class="w-64 drop-shadow-2xl opacity-95" alt="UNION" />
+      <!-- Header (solo un logo) -->
+      <header class="animate-[slide-in_0.45s_ease-out]">
+        <img
+          src="https://r2.fivemanage.com/BjbGgzDXHzAjk3tMrEqoV/union_nashei.png"
+          class="w-64 drop-shadow-2xl opacity-95"
+          alt="UNION"
+        />
 
-          <div class="mt-4 flex items-center gap-3 pl-1">
-            <div class="h-[2px] w-8 bg-union"></div>
-            <span class="text-[11px] font-bold tracking-[0.35em] text-zinc-400 uppercase">Conexión directa</span>
-          </div>
-
-          <h1 class="mt-8 text-5xl font-black italic tracking-tight text-zinc-200 leading-[0.95]">
-            ENTRAR A LA CIUDAD
-          </h1>
-
-          <p class="mt-4 text-sm text-zinc-400 leading-relaxed">
-            Conexión instantánea a <span class="text-union font-bold">UNION</span>.
-          </p>
-
-          <div class="mt-7 rounded-lg border border-white/10 bg-zinc-950/70 p-5 glow">
-            <div class="flex items-start gap-4">
-              <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-union/10 text-union border border-union/20">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                </svg>
-              </div>
-
-              <div class="flex-1">
-                <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">IMPORTANTE</div>
-                <div class="mt-1 text-sm font-bold text-zinc-200">Antes de conectar, abre FiveM.</div>
-                <div class="mt-2 text-xs text-zinc-400 leading-relaxed">
-                  Si FiveM no está abierto, el navegador puede bloquear la acción o no lanzar el cliente.
-                </div>
-
-                <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                  <button
-                    id="joinBtn"
-                    type="button"
-                    class="group inline-flex items-center justify-center gap-3 rounded-md bg-union px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-white shadow-[0_0_20px_rgba(249,115,22,0.35)] hover:bg-orange-500 transition-colors"
-                  >
-                    <svg class="w-4 h-4 opacity-90 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v6m6-6v6M5 9h14M7 9v6a5 5 0 005 5 5 5 0 005-5V9"/>
-                    </svg>
-                    Conectar ahora
-                  </button>
-
-                  <button
-                    id="helpBtn"
-                    type="button"
-                    class="inline-flex items-center justify-center gap-3 rounded-md border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-zinc-200 hover:bg-white/10 hover:border-union/30 transition-colors"
-                  >
-                    <svg class="w-4 h-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
-                    </svg>
-                    Ayuda
-                  </button>
-                </div>
-
-                <div class="mt-4 text-[10px] text-zinc-600 leading-relaxed">
-                  Si el botón no abre FiveM: abre FiveM → vuelve aquí → conecta.
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="mt-4 flex items-center gap-3 pl-1">
+          <div class="h-[2px] w-10 bg-union"></div>
+          <span class="text-[11px] font-bold tracking-[0.35em] text-zinc-400 uppercase">UNION RP • Acceso</span>
         </div>
-      </section>
+      </header>
 
-      <!-- Right -->
-      <section class="lg:col-span-6 animate-[fade-in_0.5s_ease-out]">
-        <div class="max-w-xl lg:ml-auto">
-          <div class="rounded-lg border border-white/10 bg-zinc-950/70 p-6 glow">
-            <div class="flex items-center justify-between border-b border-white/10 pb-4">
-              <div>
-                <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">UNION • STATUS</div>
-                <div class="mt-1 text-2xl font-black uppercase italic text-white hover-glow">Protocolo de entrada</div>
+      <!-- Layout -->
+      <div class="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Left: CTA -->
+        <section class="lg:col-span-7 animate-[fade-in_0.5s_ease-out]">
+          <div class="rounded-xl border border-white/10 bg-zinc-950/60 card-glow overflow-hidden">
+            <div class="h-1 w-full hairline"></div>
+
+            <div class="p-7 lg:p-9">
+              <div class="flex items-start justify-between gap-6">
+                <div>
+                  <h1 class="text-5xl font-black italic tracking-tight text-zinc-100 leading-[0.95]">
+                    ENTRAR A LA CIUDAD
+                  </h1>
+                  <p class="mt-3 text-sm text-zinc-400 leading-relaxed max-w-xl">
+                    Conexión directa al servidor mediante enlace interno de FiveM. Sin enlaces visibles, sin copias, limpio.
+                  </p>
+                </div>
+
+                <span class="hidden sm:inline-flex items-center gap-2 rounded-md bg-union/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-union border border-union/20 animate-pulse-soft">
+                  READY
+                  <span class="inline-block h-2 w-2 rounded-full bg-union shadow-[0_0_18px_rgba(249,115,22,0.75)]"></span>
+                </span>
               </div>
-              <span class="rounded bg-union/10 px-2 py-0.5 text-[10px] font-bold uppercase text-union border border-union/20 animate-pulse-soft">
-                READY
-              </span>
-            </div>
 
-            <div class="mt-5 space-y-3">
-              <div class="group relative overflow-hidden rounded-lg bg-black/40 border border-white/5 p-4 transition-all hover:border-union/40">
-                <div class="relative z-10 flex items-start gap-4">
-                  <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-white/5 text-zinc-400 group-hover:text-union transition-colors">
+              <!-- Warning block -->
+              <div class="mt-7 rounded-lg border border-white/10 bg-black/35 p-5">
+                <div class="flex items-start gap-4">
+                  <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-union/10 text-union border border-union/20">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.866-3.582 7-8 7m16-7c0 3.866 3.582 7 8 7M12 11V3m0 8c0 3.866 3.582 7 8 7M12 11c0 3.866-3.582 7-8 7"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                     </svg>
                   </div>
                   <div class="flex-1">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Paso 01</div>
-                    <div class="mt-1 font-bold text-zinc-200">Abre FiveM</div>
-                    <div class="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      FiveM debe estar abierto para capturar la conexión.
+                    <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">IMPORTANTE</div>
+                    <div class="mt-1 text-sm font-bold text-zinc-200">Abre FiveM antes de conectar.</div>
+                    <div class="mt-2 text-xs text-zinc-400 leading-relaxed">
+                      Si FiveM está cerrado, tu navegador puede bloquear la acción o no lanzar el cliente.
+                    </div>
+
+                    <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                      <button
+                        id="joinBtn"
+                        type="button"
+                        class="group inline-flex items-center justify-center gap-3 rounded-md bg-union px-6 py-3 text-xs font-black uppercase tracking-[0.22em] text-white shadow-[0_0_25px_rgba(249,115,22,0.32)] hover:bg-orange-500 transition-colors"
+                      >
+                        <svg class="w-4 h-4 opacity-90 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v6m6-6v6M5 9h14M7 9v6a5 5 0 005 5 5 5 0 005-5V9"/>
+                        </svg>
+                        Conectar ahora
+                      </button>
+
+                      <button
+                        id="helpBtn"
+                        type="button"
+                        class="inline-flex items-center justify-center gap-3 rounded-md border border-white/10 bg-white/5 px-6 py-3 text-xs font-black uppercase tracking-[0.22em] text-zinc-200 hover:bg-white/10 hover:border-union/30 transition-colors"
+                      >
+                        <svg class="w-4 h-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                        </svg>
+                        Ayuda
+                      </button>
+                    </div>
+
+                    <div class="mt-4 text-[10px] text-zinc-600 leading-relaxed">
+                      Si el botón no abre FiveM: abre FiveM → vuelve aquí → conecta.
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="group relative overflow-hidden rounded-lg bg-black/40 border border-white/5 p-4 transition-all hover:border-union/40">
-                <div class="relative z-10 flex items-start gap-4">
-                  <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-white/5 text-zinc-400 group-hover:text-union transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-8 4h6"/>
-                    </svg>
-                  </div>
-                  <div class="flex-1">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Paso 02</div>
-                    <div class="mt-1 font-bold text-zinc-200">Conecta</div>
-                    <div class="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Si el navegador pregunta “abrir aplicación”, acepta.
-                    </div>
-                  </div>
+              <!-- footer -->
+              <div class="mt-7 flex items-center justify-between border-t border-white/10 pt-5">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                  UNION RP • CONNECT
+                </div>
+                <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-700">
+                  Secure Join
                 </div>
               </div>
-
-              <div class="group relative overflow-hidden rounded-lg bg-black/40 border border-white/5 p-4 transition-all hover:border-union/40">
-                <div class="relative z-10 flex items-start gap-4">
-                  <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded bg-white/5 text-zinc-400 group-hover:text-union transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/>
-                    </svg>
-                  </div>
-                  <div class="flex-1">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Paso 03</div>
-                    <div class="mt-1 font-bold text-zinc-200">Carga recursos</div>
-                    <div class="mt-1 text-xs text-zinc-400 leading-relaxed">
-                      Espera a que termine la sincronización.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
-              <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                UNION RP • CONNECT
-              </div>
-              <button id="cinematicBtn"
-                class="rounded bg-white/5 px-3 py-1.5 border border-white/10 hover:border-union/40 hover:bg-union/10 transition text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-white"
-                type="button"
-              >
-                Cinemática
-              </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
+        <!-- Right: Steps (más compacto y premium) -->
+        <aside class="lg:col-span-5 animate-[fade-in_0.65s_ease-out]">
+          <div class="rounded-xl border border-white/10 bg-zinc-950/50 card-glow overflow-hidden">
+            <div class="h-1 w-full hairline"></div>
+            <div class="p-7">
+              <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">PROCEDIMIENTO</div>
+                  <div class="mt-1 text-2xl font-black uppercase italic text-white">Checklist</div>
+                </div>
+                <span class="rounded bg-white/5 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 border border-white/10">
+                  3 pasos
+                </span>
+              </div>
+
+              <div class="mt-5 space-y-3">
+                <div class="rounded-lg border border-white/10 bg-black/30 p-4">
+                  <div class="flex items-start gap-3">
+                    <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded bg-white/5 text-union border border-union/20">
+                      <span class="text-xs font-black">01</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-bold text-zinc-200">Abre FiveM</div>
+                      <div class="mt-1 text-xs text-zinc-400 leading-relaxed">Déjalo abierto (segundo plano vale).</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-lg border border-white/10 bg-black/30 p-4">
+                  <div class="flex items-start gap-3">
+                    <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded bg-white/5 text-union border border-union/20">
+                      <span class="text-xs font-black">02</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-bold text-zinc-200">Pulsa Conectar</div>
+                      <div class="mt-1 text-xs text-zinc-400 leading-relaxed">Acepta el aviso del navegador si aparece.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-lg border border-white/10 bg-black/30 p-4">
+                  <div class="flex items-start gap-3">
+                    <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded bg-white/5 text-union border border-union/20">
+                      <span class="text-xs font-black">03</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-bold text-zinc-200">Espera la carga</div>
+                      <div class="mt-1 text-xs text-zinc-400 leading-relaxed">Si se queda pillado, reintenta desde aquí.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 text-[10px] text-zinc-600 leading-relaxed">
+                Nota: algunos navegadores requieren permitir “abrir aplicación” la primera vez.
+              </div>
+            </div>
+          </div>
+        </aside>
+
+      </div>
     </div>
   </main>
 
   <script>
-    // ✅ No IP / no fivem:// in HTML.
-    // Se carga desde join.json (mismo directorio).
+    // No IP / no fivem:// in HTML.
     const JOIN_ENDPOINT = "./join.json";
 
     function toast({ title, message, type = "primary", ms = 3200 }) {
@@ -268,7 +284,7 @@
       t.textContent = title || "UNION";
       m.textContent = message || "";
 
-      document.querySelector(".fixed.top-10.right-10.z-\\[80\\]").appendChild(node);
+      document.querySelector(".fixed.top-8.right-8.z-\\[80\\]").appendChild(node);
 
       bar.style.transition = `transform ${ms}ms linear`;
       bar.style.transformOrigin = "left";
@@ -286,7 +302,6 @@
     }
 
     async function getJoinUrl() {
-      // Carga dinámica (no aparece en HTML)
       const res = await fetch(JOIN_ENDPOINT, { cache: "no-store" });
       if (!res.ok) throw new Error("JOIN_ENDPOINT_FETCH_FAILED");
       const data = await res.json();
@@ -294,9 +309,7 @@
       return data.url;
     }
 
-    // Connect
-    const joinBtn = document.getElementById("joinBtn");
-    joinBtn.addEventListener("click", async () => {
+    document.getElementById("joinBtn").addEventListener("click", async () => {
       toast({
         title: "Conexión",
         message: "Asegúrate de tener FiveM abierto. Si el navegador pregunta, acepta.",
@@ -306,43 +319,33 @@
 
       try {
         const url = await getJoinUrl();
-        // Disparamos conexión sin mostrar href ni preview.
         window.location.href = url;
       } catch (e) {
         toast({
           title: "Error",
-          message: "No se pudo iniciar la conexión. Revisa que join.json exista y vuelva a intentarlo.",
+          message: "No se pudo iniciar la conexión. Revisa la configuración del join.",
           type: "error",
           ms: 4200
         });
       }
     });
 
-    // Help
     document.getElementById("helpBtn").addEventListener("click", () => {
       toast({
         title: "Ayuda",
-        message: "Abre FiveM → vuelve a esta pestaña → pulsa Conectar. Si el navegador bloquea, permite abrir la aplicación.",
+        message: "Abre FiveM → vuelve aquí → pulsa Conectar. Si se bloquea, permite abrir la aplicación.",
         type: "primary",
         ms: 5200
       });
     });
 
-    // Cinematic toggle
-    const cinematicBtn = document.getElementById("cinematicBtn");
-    const topBar = document.getElementById("cinematicTop");
-    const bottomBar = document.getElementById("cinematicBottom");
-    let cinematic = false;
-
-    cinematicBtn.addEventListener("click", () => {
-      cinematic = !cinematic;
-      topBar.style.height = cinematic ? "64px" : "0px";
-      bottomBar.style.height = cinematic ? "64px" : "0px";
-      toast({ title: "Cinemática", message: cinematic ? "Activada." : "Desactivada.", type: "primary", ms: 2200 });
-    });
-
     window.addEventListener("load", () => {
-      toast({ title: "UNION", message: "Tip: abre FiveM antes de pulsar Conectar.", type: "primary", ms: 3000 });
+      toast({
+        title: "UNION",
+        message: "Tip: abre FiveM antes de pulsar Conectar.",
+        type: "primary",
+        ms: 2800
+      });
     });
   </script>
 </body>
