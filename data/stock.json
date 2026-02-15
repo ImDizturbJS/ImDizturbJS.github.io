@@ -1,7 +1,19 @@
 {
-  "generatedAt": "2026-02-15T17:00:00.045Z",
+  "generatedAt": "2026-02-15T17:10:00.050Z",
   "guildId": "1471170954603266144",
   "items": [
+    {
+      "sku": "KPPOBOID",
+      "name": "Blueprint Barra de luz azul",
+      "category": "Blueprints",
+      "description": "Una luz química arrojable que ilumina el área que la rodea.",
+      "priceCents": 400,
+      "currency": "usd",
+      "stock": 0,
+      "isActive": true,
+      "image": "https://arcraiders.wiki/w/images/thumb/c/cc/Blue_Light_Stick.png/348px-Blue_Light_Stick.png.webp",
+      "updatedAt": "2026-02-15T17:09:16.444Z"
+    },
     {
       "sku": "1QKVHQCR",
       "name": "Blueprint Bettina",
