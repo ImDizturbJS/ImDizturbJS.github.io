@@ -1,11 +1,12 @@
 {
-  "generatedAt": "2026-02-15T01:40:00.054Z",
+  "generatedAt": "2026-02-15T01:50:00.082Z",
   "guildId": "1471170954603266144",
   "items": [
     {
       "sku": "1QKVHQCR",
       "name": "Blueprint Bettina",
       "category": "Blueprints",
+      "description": "El Bettina es totalmente automático Rifle de asalto que usa Munición pesada.",
       "priceCents": 800,
       "currency": "usd",
       "stock": 6,
