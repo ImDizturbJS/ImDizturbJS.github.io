@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-15T02:40:00.043Z",
+  "generatedAt": "2026-02-15T02:50:00.056Z",
   "guildId": "1471170954603266144",
   "items": [
     {
@@ -9,10 +9,10 @@
       "description": "El Bettina es totalmente automático Rifle de asalto que usa Munición pesada.",
       "priceCents": 800,
       "currency": "usd",
-      "stock": 6,
+      "stock": 5,
       "isActive": true,
       "image": "https://arcraiders.wiki/w/images/thumb/a/ac/Bettina.png/348px-Bettina.png.webp",
-      "updatedAt": "2026-02-15T00:18:31.212Z"
+      "updatedAt": "2026-02-15T02:47:42.501Z"
     }
   ]
 }
