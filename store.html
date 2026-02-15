@@ -3,601 +3,526 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MK STORE // STOCK</title>
-  <meta name="description" content="Terminal de Suministros." />
+  <title>MK STORE</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            neon: '#B6ff00',
+            void: '#050505',
+            panel: '#0E0E0E',
+            surface: '#161616',
+            border: '#262626'
+          },
+          fontFamily: {
+            display: ['Space Grotesk', 'sans-serif'],
+            ui: ['Manrope', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
   <style>
+    /* === CORE AESTHETICS === */
     :root {
-      --arc-orange: #FF4E20; /* Naranja estilo ARC Raiders */
-      --arc-dark: #09090B;
-      --arc-panel: #121214;
-      --arc-border: rgba(255, 255, 255, 0.15);
-      --arc-text-muted: rgba(255, 255, 255, 0.5);
-      --scanline-color: rgba(0, 0, 0, 0.5);
+      --neon: #B6ff00;
+      --neon-dim: rgba(182, 255, 0, 0.15);
     }
-
+    
     body {
       background-color: #050505;
       color: #e5e5e5;
-      font-family: 'Rajdhani', sans-serif;
-      overflow-x: hidden;
-      cursor: crosshair; /* Cursor táctico */
+      font-family: 'Manrope', sans-serif;
+      overflow: hidden; /* Locked during load */
     }
 
-    /* === FONTS === */
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
-    .font-tech { font-family: 'Rajdhani', sans-serif; }
-
-    /* === BACKGROUND FX === */
-    .bg-grid-pattern {
+    /* Background Grid */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: -1;
       background-image: 
         linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      position: fixed; inset: 0; z-index: -2;
-    }
-    
-    /* Vignette & Scanlines */
-    .overlay-fx {
-      position: fixed; inset: 0; pointer-events: none; z-index: 50;
-      background: radial-gradient(circle, transparent 60%, #000 100%);
-    }
-    .scanlines {
-      position: fixed; inset: 0; pointer-events: none; z-index: 49;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.2) 3px,
-        rgba(0, 0, 0, 0.2) 4px
-      );
+      background-size: 60px 60px;
+      opacity: 0.6;
     }
 
-    /* === UTILS === */
-    .text-arc { color: var(--arc-orange); }
-    .bg-arc { background-color: var(--arc-orange); }
-    .border-arc { border-color: var(--arc-orange); }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #111; }
-    ::-webkit-scrollbar-thumb { background: #333; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--arc-orange); }
-
-    /* === COMPONENTS === */
-    .panel {
-      background: rgba(18, 18, 20, 0.85);
-      border: 1px solid var(--arc-border);
-      backdrop-filter: blur(12px);
-      position: relative;
-    }
-
-    /* Esquinas cortadas (Tactical Corners) */
-    .corner-clip {
-      clip-path: polygon(
-        0 0, 
-        100% 0, 
-        100% calc(100% - 12px), 
-        calc(100% - 12px) 100%, 
-        0 100%
-      );
-    }
-
-    /* Inputs */
-    .input-tech {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid #333;
-      color: white;
-      transition: all 0.2s;
-      text-transform: uppercase;
-    }
-    .input-tech:focus {
-      border-color: var(--arc-orange);
-      outline: none;
-      box-shadow: 0 0 15px rgba(255, 78, 32, 0.2);
-    }
-
-    /* Buttons */
-    .btn-primary {
-      background: var(--arc-orange);
-      color: black;
+    /* === UI COMPONENTS === */
+    .btn-neon {
+      background: var(--neon);
+      color: #000;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      transition: all 0.2s;
+      letter-spacing: 0.05em;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     }
-    .btn-primary:hover {
-      background: white;
-      transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(255, 78, 32, 0.4);
+    .btn-neon:hover {
+      box-shadow: 0 0 25px var(--neon);
+      transform: scale(1.02);
     }
-    .btn-ghost {
+
+    .input-dark {
+      background: #0E0E0E;
       border: 1px solid #333;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: white;
+      transition: border-color 0.3s;
     }
-    .btn-ghost:hover {
-      border-color: #fff;
-      color: #fff;
-      background: rgba(255,255,255,0.05);
+    .input-dark:focus {
+      outline: none;
+      border-color: var(--neon);
     }
 
     /* === CARD DESIGN === */
-    .item-card {
+    .card-tech {
+      background: #0E0E0E;
+      border: 1px solid #1F1F1F;
       position: relative;
-      background: linear-gradient(180deg, rgba(20,20,20,0.6) 0%, rgba(10,10,10,0.9) 100%);
-      border: 1px solid #222;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
+      transition: border-color 0.3s;
     }
-    
-    .item-card::before {
-      content: "";
-      position: absolute; top:0; left:0; width: 100%; height: 2px;
-      background: var(--arc-orange);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.3s ease;
-      z-index: 10;
+    .card-tech::after {
+      content: ''; position: absolute; inset: 0;
+      border: 1px solid var(--neon);
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
     }
-    
-    .item-card:hover {
-      border-color: rgba(255, 255, 255, 0.4);
-      transform: translateY(-4px);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    }
-    .item-card:hover::before { transform: scaleX(1); }
-    
-    .item-card:hover .img-zoom {
-      transform: scale(1.1);
-      filter: grayscale(0%);
+    .card-tech:hover { border-color: #333; }
+    .card-tech:hover::after { opacity: 1; }
+
+    .card-tech:hover .card-img { transform: scale(1.05); filter: grayscale(0%); }
+    .card-img {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s;
+      filter: grayscale(100%);
     }
 
-    .img-wrapper {
-      position: relative;
-      width: 100%;
-      padding-bottom: 75%; /* 4:3 Aspect Ratio */
-      overflow: hidden;
-      border-bottom: 1px solid #222;
-    }
-    .img-zoom {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      filter: grayscale(60%) sepia(10%) contrast(1.2);
-      transition: transform 0.5s ease, filter 0.3s;
-    }
+    /* === SCROLLBAR === */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #050505; }
+    ::-webkit-scrollbar-thumb { background: #333; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--neon); }
 
-    /* === STOCK BADGES === */
-    .badge-stock {
-      position: absolute; top: 10px; right: 10px;
-      background: black; border: 1px solid #333;
-      padding: 2px 8px;
-      font-size: 0.7rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.1em;
-      z-index: 5;
+    /* === LOADERS === */
+    .loader-wrap {
+      position: fixed; inset: 0; z-index: 100;
+      background: #050505;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
     }
-    .st-ok { color: #10B981; border-color: rgba(16, 185, 129, 0.4); }
-    .st-low { color: #F59E0B; border-color: rgba(245, 158, 11, 0.4); }
-    .st-out { color: #EF4444; border-color: rgba(239, 68, 68, 0.4); text-decoration: line-through; }
-    .st-inf { color: #3B82F6; border-color: rgba(59, 130, 246, 0.4); }
-
-    /* === BOOT ANIMATION === */
-    #boot-screen {
-      position: fixed; inset: 0; background: #000; z-index: 100;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.5s;
-    }
-    .loader-bar {
-      width: 200px; height: 2px; background: #222; margin-top: 20px;
-      position: relative; overflow: hidden;
-    }
-    .loader-progress {
-      position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
-      background: var(--arc-orange);
-      transform: translateX(-100%);
-      animation: load 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-    @keyframes load { to { transform: translateX(0); } }
-
-    /* === MODAL === */
-    .modal-backdrop {
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(5px);
-    }
-    .modal-content {
-      box-shadow: 0 0 50px rgba(0,0,0,0.9), 0 0 0 1px #333;
-      background: #0c0c0c;
+    .scan-line {
+      width: 100%; height: 1px; background: var(--neon);
+      position: absolute; top: 0;
+      box-shadow: 0 0 10px var(--neon);
+      opacity: 0.5;
     }
   </style>
 </head>
 
-<body>
+<body class="antialiased selection:bg-neon selection:text-black">
 
-  <div class="bg-grid-pattern"></div>
-  <div class="scanlines"></div>
-  <div class="overlay-fx"></div>
+  <div class="bg-grid"></div>
 
-  <div id="boot-screen">
-    <div class="text-4xl font-bold tracking-widest text-white mb-2">MK STORE<span class="text-arc"></span></div>
-    <div class="text-xs font-mono text-gray-500">INITIALIZING SECURE CONNECTION...</div>
-    <div class="loader-bar"><div class="loader-progress"></div></div>
+  <div id="loader" class="loader-wrap">
+    <div class="w-64">
+      <div class="flex justify-between mb-2 text-xs font-mono text-neon">
+        <span>Cargando...</span>
+        <span id="loadPct">0%</span>
+      </div>
+      <div class="h-1 w-full bg-gray-900 relative overflow-hidden">
+        <div id="loadBar" class="h-full bg-neon w-0 shadow-[0_0_15px_#B6ff00]"></div>
+      </div>
+      <div class="mt-4 text-center font-display text-4xl font-bold tracking-tighter text-white">
+        MK<span class="text-neon">STORE</span>
+      </div>
+    </div>
+    <div class="scan-line hidden" id="scanLine"></div>
   </div>
 
-  <div class="relative z-10 min-h-screen flex flex-col p-4 md:p-8 max-w-[1600px] mx-auto">
+  <div id="app" class="opacity-0 relative min-h-screen flex flex-col p-6 md:p-10 max-w-[1800px] mx-auto">
     
-    <header class="flex flex-col md:flex-row gap-6 justify-between items-end mb-10 border-b border-white/10 pb-6">
-      <div>
-        <div class="flex items-center gap-3">
-          <div class="h-3 w-3 bg-arc animate-pulse"></div>
-          <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase leading-none">
-            Stock <span class="text-arc">Control</span>
-          </h1>
+    <header class="flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-6 mb-8 gap-6">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-neon flex items-center justify-center font-bold text-black text-2xl">
+          M
         </div>
-        <p class="mt-2 font-mono text-xs text-gray-400 max-w-md uppercase tracking-wider">
-          <span class="text-arc">>></span> Revisa el stock de MK Store, se actualiza cada 10 minutos.
-        </p>
+        <div>
+          <h1 class="text-4xl font-display font-bold uppercase leading-none tracking-tight">
+            MK Stock <span class="text-gray-600">v0.4</span>
+          </h1>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="w-2 h-2 bg-neon rounded-full shadow-[0_0_8px_#B6ff00] animate-pulse"></span>
+            <span class="text-xs font-mono text-gray-400 uppercase tracking-widest">El stock se actualiza cada 10 minutos.</span>
+          </div>
+        </div>
       </div>
 
-      <div class="flex gap-4 md:gap-8">
-        <div class="text-right">
-          <div class="text-[10px] font-mono text-gray-500 uppercase">Total Items</div>
-          <div id="kpiTotal" class="text-2xl font-bold">000</div>
+      <div class="flex gap-1 md:gap-4 font-mono text-xs">
+        <div class="bg-surface border border-border px-4 py-3 min-w-[100px]">
+          <div class="text-gray-500 mb-1">TODOS LOS ITEMS</div>
+          <div id="kpiTotal" class="text-xl text-white font-bold">000</div>
         </div>
-        <div class="text-right">
-          <div class="text-[10px] font-mono text-gray-500 uppercase">Active</div>
-          <div id="kpiActive" class="text-2xl font-bold text-white">000</div>
+        <div class="bg-surface border border-border px-4 py-3 min-w-[100px]">
+          <div class="text-gray-500 mb-1">EN STOCK</div>
+          <div id="kpiActive" class="text-xl text-neon font-bold">000</div>
         </div>
-        <div class="text-right">
-          <div class="text-[10px] font-mono text-gray-500 uppercase">Critical</div>
-          <div id="kpiLow" class="text-2xl font-bold text-arc">00</div>
+        <div class="bg-surface border border-border px-4 py-3 min-w-[100px]">
+          <div class="text-gray-500 mb-1">SIN STOCK</div>
+          <div id="kpiLow" class="text-xl text-white font-bold">00</div>
         </div>
       </div>
     </header>
 
-    <section class="mb-8 grid grid-cols-1 md:grid-cols-12 gap-4">
-      <div class="md:col-span-5 relative group">
-        <div class="absolute left-0 top-0 bottom-0 w-1 bg-white/20 group-focus-within:bg-arc transition-colors"></div>
-        <input id="searchInput" type="text" placeholder="BUSCAR ITEM / SKU..." 
-          class="w-full h-12 bg-white/5 text-white px-4 pl-6 border-none focus:ring-0 font-mono text-sm uppercase tracking-wide outline-none">
-        <div class="absolute right-4 top-3 text-xs text-gray-500 font-mono">[SEARCH]</div>
+    <nav class="sticky top-4 z-40 bg-void/90 backdrop-blur-md border border-white/10 p-2 mb-10 flex flex-col md:flex-row gap-2 shadow-2xl">
+      <div class="flex-grow relative">
+        <input id="searchInput" type="text" placeholder="Buscar Items..." 
+          class="w-full bg-surface text-white h-12 px-4 pl-10 border border-transparent focus:border-neon outline-none font-mono text-sm uppercase transition-colors placeholder-gray-600">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neon text-lg">›</span>
       </div>
-
-      <div class="md:col-span-3 relative">
-        <select id="categorySelect" class="w-full h-12 bg-white/5 text-gray-300 px-4 border-none focus:ring-0 font-mono text-sm uppercase cursor-pointer appearance-none">
-          <option value="All">TODAS LAS CATEGORÍAS</option>
-        </select>
-        <div class="absolute right-4 top-4 pointer-events-none text-[10px]">▼</div>
-      </div>
-
-      <div class="md:col-span-2 relative">
-        <select id="statusSelect" class="w-full h-12 bg-white/5 text-gray-300 px-4 border-none focus:ring-0 font-mono text-sm uppercase cursor-pointer appearance-none">
-          <option value="all">ESTADO: TODOS</option>
-          <option value="in">EN STOCK</option>
-          <option value="low">CRÍTICO</option>
-          <option value="out">AGOTADO</option>
-        </select>
-        <div class="absolute right-4 top-4 pointer-events-none text-[10px]">▼</div>
-      </div>
-
-      <div class="md:col-span-2">
-        <button id="refreshBtn" class="w-full h-12 btn-ghost font-bold text-xs tracking-widest flex items-center justify-center gap-2">
-          SYNC DATA <span class="text-arc">↻</span>
-        </button>
-      </div>
-    </section>
-
-    <main class="flex-1 relative min-h-[400px]">
       
-      <div id="loader" class="absolute inset-0 flex items-start justify-center pt-20 z-20 bg-black/50 backdrop-blur-sm hidden">
-        <div class="font-mono text-arc text-sm animate-pulse">>> ACCESSING DATABASE...</div>
-      </div>
+      <select id="categorySelect" class="bg-surface text-gray-300 h-12 px-4 border border-transparent focus:border-neon outline-none font-mono text-xs uppercase cursor-pointer min-w-[200px]">
+        <option value="All">Todas las Categorias</option>
+      </select>
 
-      <div id="emptyState" class="hidden flex flex-col items-center justify-center py-20 text-center border border-dashed border-white/10">
-        <div class="text-4xl text-gray-700 mb-2 font-bold">NO DATA FOUND</div>
-        <p class="font-mono text-xs text-gray-500">ADJUST FILTERS OR SEARCH PARAMETERS</p>
-      </div>
+      <select id="statusSelect" class="bg-surface text-gray-300 h-12 px-4 border border-transparent focus:border-neon outline-none font-mono text-xs uppercase cursor-pointer min-w-[150px]">
+        <option value="all">Estado: Todos</option>
+        <option value="in">En Stock</option>
+        <option value="low">Stock Bajo</option>
+        <option value="out">Sin Stock</option>
+      </select>
 
-      <div id="gridTarget" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        </div>
-    </main>
+      <button id="refreshBtn" class="bg-white hover:bg-neon hover:text-black text-black h-12 px-6 font-bold uppercase text-xs tracking-widest transition-colors">
+        Actualizar
+      </button>
+    </nav>
 
-    <footer class="mt-12 py-6 border-t border-white/5 flex justify-between items-center text-[10px] font-mono text-gray-600 uppercase">
-      <div>MK Store · v0.4</div>
-      <div id="lastSync">SYNC: PENDING</div>
-    </footer>
+    <main id="gridTarget" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-4">
+      </main>
+
+    <div id="emptyState" class="hidden py-32 text-center border border-dashed border-gray-800">
+      <h2 class="text-2xl font-display font-bold text-gray-700">NO SE HA ENCONTRADO NADA</h2>
+      <p class="text-gray-600 text-sm font-mono mt-2">AJUSTA LOS FILTROS O LA BUSQUEDA</p>
+    </div>
 
   </div>
 
-  <div id="modalBackdrop" class="fixed inset-0 modal-backdrop z-[60] hidden flex items-center justify-center p-4">
-    <div id="modalPanel" class="modal-content w-full max-w-4xl relative transform scale-95 opacity-0 transition-all duration-300 corner-clip">
-      
-      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-arc-orange to-transparent opacity-50"></div>
-      
-      <button id="modalClose" class="absolute top-0 right-0 p-4 text-gray-400 hover:text-white z-10 text-xl font-bold">&times;</button>
+  <div id="drawerBackdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+  
+  <aside id="drawer" class="fixed top-0 right-0 h-full w-full md:w-[600px] bg-[#0A0A0A] z-[60] transform translate-x-full border-l border-white/10 flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+    
+    <div class="h-20 border-b border-white/10 flex items-center justify-between px-8 bg-[#0F0F0F]">
+      <div class="font-mono text-xs text-neon tracking-widest">ITEM_DETAILS // <span id="dSku">---</span></div>
+      <button id="closeDrawer" class="text-gray-500 hover:text-white transition-colors text-2xl">&times;</button>
+    </div>
 
-      <div class="flex flex-col md:flex-row h-full">
-        <div class="md:w-5/12 bg-[#080808] relative border-r border-white/5 min-h-[300px]">
-          <div id="mImage" class="absolute inset-0 w-full h-full object-cover opacity-80" style="background-size:cover; background-position:center;"></div>
-          <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-          <div class="absolute bottom-4 left-4">
-            <div id="mSku" class="font-mono text-xs bg-black text-white px-2 py-1 inline-block border border-gray-700">SKU: ---</div>
+    <div class="flex-1 overflow-y-auto custom-scrollbar">
+      <div class="relative h-[350px] bg-black group overflow-hidden border-b border-white/5">
+        <div id="dImage" class="absolute inset-0 bg-cover bg-center opacity-80 transition-transform duration-700 group-hover:scale-105"></div>
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30 mix-blend-overlay"></div>
+        <div class="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black to-transparent">
+          <span id="dCat" class="bg-neon text-black text-[10px] font-bold px-2 py-1 uppercase mb-2 inline-block">Category</span>
+          <h2 id="dName" class="text-4xl font-display font-bold text-white uppercase leading-none">Item Name</h2>
+        </div>
+      </div>
+
+      <div class="p-8 space-y-8">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-surface p-4 border-l-2 border-white/20">
+            <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Price per Unit</div>
+            <div id="dPrice" class="text-2xl font-bold font-display text-white">$0.00</div>
+          </div>
+          <div class="bg-surface p-4 border-l-2 border-white/20">
+            <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Availability</div>
+            <div id="dStock" class="font-bold text-white">---</div>
           </div>
         </div>
 
-        <div class="md:w-7/12 p-8 flex flex-col">
-          <div class="flex items-center gap-2 mb-1">
-             <span id="mCat" class="text-[10px] font-bold tracking-[0.2em] text-arc uppercase">CATEGORY</span>
-          </div>
-          <h2 id="mName" class="text-3xl md:text-4xl font-extrabold uppercase leading-none mb-4">ITEM NAME</h2>
-          
-          <div class="h-px w-full bg-white/10 mb-6"></div>
+        <div>
+          <h3 class="text-xs font-bold uppercase text-gray-500 tracking-wider mb-3">Tactical Description</h3>
+          <p id="dDesc" class="text-gray-300 text-sm leading-relaxed font-ui border-l border-neon pl-4">
+            No description available.
+          </p>
+        </div>
 
-          <div class="grid grid-cols-2 gap-6 mb-8">
-            <div>
-              <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Unit Price</div>
-              <div id="mPrice" class="text-2xl font-bold text-white">$0.00</div>
-            </div>
-            <div>
-              <div class="text-[10px] text-gray-500 font-mono uppercase mb-1">Availability</div>
-              <div id="mStock" class="text-xl font-bold">---</div>
-            </div>
-          </div>
-
-          <div class="bg-white/5 p-4 border border-white/5 flex-grow">
-            <div class="text-[10px] text-gray-500 font-mono uppercase mb-2">Technical Description</div>
-            <p id="mDesc" class="text-sm text-gray-300 leading-relaxed font-mono">
-              No description available.
-            </p>
-          </div>
-
-          <div class="mt-6 flex justify-end">
-             <div class="text-[10px] font-mono text-gray-600">LAST DB UPDATE: <span id="mUpdate">---</span></div>
-          </div>
+        <div class="flex items-center justify-between pt-8 border-t border-white/5 text-[10px] font-mono text-gray-600">
+          <span>LAST_UPDATE</span>
+          <span id="dUpdate" class="text-gray-400">---</span>
         </div>
       </div>
     </div>
-  </div>
+
+    <div class="p-6 border-t border-white/10 bg-[#0F0F0F]">
+      <button class="w-full btn-neon py-4 text-sm tracking-widest" onclick="closeDrawer()">
+        Close Panel
+      </button>
+    </div>
+  </aside>
 
   <script>
     // CONFIG
-    const DATA_URL = "data/stock.json"; 
+    const DATA_URL = "data/stock.json";
 
-    // STATE
-    let rawItems = [];
-    
-    // DOM ELEMENTS
+    // ELEMENTS
     const el = {
-      grid: document.getElementById('gridTarget'),
       loader: document.getElementById('loader'),
-      empty: document.getElementById('emptyState'),
-      searchInput: document.getElementById('searchInput'),
+      loadPct: document.getElementById('loadPct'),
+      loadBar: document.getElementById('loadBar'),
+      app: document.getElementById('app'),
+      grid: document.getElementById('gridTarget'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      
+      // Filter Els
+      search: document.getElementById('searchInput'),
       catSelect: document.getElementById('categorySelect'),
       statSelect: document.getElementById('statusSelect'),
-      refreshBtn: document.getElementById('refreshBtn'),
+      
+      // Drawer
+      drawer: document.getElementById('drawer'),
+      drawerBack: document.getElementById('drawerBackdrop'),
+      closeDrawerBtn: document.getElementById('closeDrawer'),
+      
+      // Drawer Content
+      dName: document.getElementById('dName'),
+      dSku: document.getElementById('dSku'),
+      dCat: document.getElementById('dCat'),
+      dPrice: document.getElementById('dPrice'),
+      dStock: document.getElementById('dStock'),
+      dDesc: document.getElementById('dDesc'),
+      dImage: document.getElementById('dImage'),
+      dUpdate: document.getElementById('dUpdate'),
+
+      // KPIs
       kpiTotal: document.getElementById('kpiTotal'),
       kpiActive: document.getElementById('kpiActive'),
       kpiLow: document.getElementById('kpiLow'),
-      lastSync: document.getElementById('lastSync'),
-      bootScreen: document.getElementById('boot-screen'),
-      // Modal
-      modalBackdrop: document.getElementById('modalBackdrop'),
-      modalPanel: document.getElementById('modalPanel'),
-      modalClose: document.getElementById('modalClose'),
-      mName: document.getElementById('mName'),
-      mCat: document.getElementById('mCat'),
-      mPrice: document.getElementById('mPrice'),
-      mStock: document.getElementById('mStock'),
-      mSku: document.getElementById('mSku'),
-      mDesc: document.getElementById('mDesc'),
-      mImage: document.getElementById('mImage'),
-      mUpdate: document.getElementById('mUpdate'),
     };
 
-    // UTILS
-    const fmtMoney = (c, curr) => {
-      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: curr || 'EUR' }).format(c / 100);
-    };
+    let rawItems = [];
 
-    const getStockHtml = (stock) => {
-      if (stock === -1) return `<span class="st-inf">∞ UNLIMITED</span>`;
-      if (stock <= 0) return `<span class="st-out">OUT OF STOCK</span>`;
-      if (stock <= 5) return `<span class="st-low">⚠ LOW (${stock})</span>`;
-      return `<span class="st-ok">IN STOCK (${stock})</span>`;
-    };
+    // --- 1. BOOT SEQUENCE (GSAP) ---
+    function runBootSequence() {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          document.body.style.overflow = 'auto'; // Unlock scroll
+          loadData();
+        }
+      });
 
-    const getStockBadgeClass = (stock) => {
-      if (stock === -1) return 'st-inf';
-      if (stock <= 0) return 'st-out';
-      if (stock <= 5) return 'st-low';
-      return 'st-ok';
-    };
+      tl.to(el.loadBar, { width: '100%', duration: 1.5, ease: "power2.inOut" })
+        .to(el.loadPct, { 
+          innerText: "100%", 
+          duration: 1.5, 
+          snap: { innerText: 1 }, 
+          ease: "none" 
+        }, "<")
+        .to(el.loader, { 
+          yPercent: -100, 
+          duration: 0.8, 
+          ease: "expo.inOut", 
+          delay: 0.2 
+        })
+        .set(el.loader, { display: 'none' })
+        .to(el.app, { opacity: 1, duration: 0.5 })
+        .from("header > div", { 
+          y: 20, opacity: 0, stagger: 0.1, duration: 0.8, ease: "power3.out" 
+        })
+        .from("nav", { 
+          y: 20, opacity: 0, duration: 0.8, ease: "power3.out" 
+        }, "-=0.6");
+    }
 
-    // INITIALIZATION
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        el.bootScreen.style.opacity = '0';
-        setTimeout(() => el.bootScreen.remove(), 500);
-      }, 1800);
-      loadData();
-    });
-
-    // LOAD DATA
+    // --- 2. DATA LOGIC ---
     async function loadData() {
-      el.loader.classList.remove('hidden');
-      
+      el.refreshBtn.innerHTML = "SINCRONIZANDO...";
       try {
         const res = await fetch(`${DATA_URL}?t=${Date.now()}`);
-        if (!res.ok) throw new Error("Network error");
+        if (!res.ok) throw new Error("Connection Lost");
         const data = await res.json();
         rawItems = data.items || [];
         
-        // Update KPIs
-        updateKPIs(data.generatedAt);
-        
-        // Build Categories
-        const cats = [...new Set(rawItems.map(i => i.category || 'General'))].sort();
-        el.catSelect.innerHTML = `<option value="All">TODAS LAS CATEGORÍAS</option>` + 
-          cats.map(c => `<option value="${c}">${c.toUpperCase()}</option>`).join('');
-
-        render();
+        updateKPIs();
+        populateCategories();
+        renderGrid();
       } catch (e) {
         console.error(e);
-        el.grid.innerHTML = `<div class="col-span-full text-center text-red-500 font-mono">CONNECTION FAILED // RETRYING...</div>`;
       } finally {
-        el.loader.classList.add('hidden');
+        el.refreshBtn.innerHTML = "ACTUALIZAR";
       }
     }
 
-    function updateKPIs(dateIso) {
+    function updateKPIs() {
       const active = rawItems.filter(i => i.isActive);
-      el.kpiTotal.textContent = rawItems.length.toString().padStart(3, '0');
-      el.kpiActive.textContent = active.length.toString().padStart(3, '0');
-      el.kpiLow.textContent = active.filter(i => i.stock !== -1 && i.stock <= 5).length.toString().padStart(2, '0');
-      
-      if(dateIso) {
-        const d = new Date(dateIso);
-        el.lastSync.innerHTML = `LAST SYNC: <span class="text-white">${d.toLocaleTimeString()}</span> // ${d.toLocaleDateString()}`;
-      }
+      // Animate numbers
+      gsap.to(el.kpiTotal, { innerText: rawItems.length, snap: "innerText", duration: 1 });
+      gsap.to(el.kpiActive, { innerText: active.length, snap: "innerText", duration: 1 });
+      gsap.to(el.kpiLow, { 
+        innerText: active.filter(i => i.stock !== -1 && i.stock <= 5).length, 
+        snap: "innerText", duration: 1 
+      });
     }
 
-    // RENDER
-    function render() {
-      const q = el.searchInput.value.toLowerCase();
+    function populateCategories() {
+      const curr = el.catSelect.value;
+      const cats = [...new Set(rawItems.map(i => i.category || 'General'))].sort();
+      el.catSelect.innerHTML = `<option value="All">ALL CATEGORIES</option>` + 
+        cats.map(c => `<option value="${c}">${c.toUpperCase()}</option>`).join('');
+      el.catSelect.value = curr;
+    }
+
+    // --- 3. RENDER & ANIMATION ---
+    function renderGrid() {
+      const q = el.search.value.toLowerCase();
       const cat = el.catSelect.value;
       const stat = el.statSelect.value;
 
-      const filtered = rawItems.filter(item => {
-        if (!item.isActive) return false;
-        if (cat !== 'All' && item.category !== cat) return false;
+      // Filter
+      const filtered = rawItems.filter(i => {
+        if (!i.isActive) return false;
+        if (cat !== 'All' && i.category !== cat) return false;
         
-        // Status filter
-        if (stat === 'out' && (item.stock === -1 || item.stock > 0)) return false;
-        if (stat === 'low' && (item.stock === -1 || item.stock > 5 || item.stock <= 0)) return false;
-        if (stat === 'in' && (item.stock !== -1 && item.stock <= 5)) return false;
+        const inf = i.stock === -1;
+        const out = !inf && i.stock <= 0;
+        const low = !inf && i.stock <= 5 && i.stock > 0;
+        const ok = !inf && i.stock > 5;
 
-        // Search
-        const hay = `${item.name} ${item.sku} ${item.category}`.toLowerCase();
-        return hay.includes(q);
+        if (stat === 'out' && !out) return false;
+        if (stat === 'low' && !low) return false;
+        if (stat === 'in' && !ok) return false;
+
+        const txt = `${i.name} ${i.sku} ${i.category}`.toLowerCase();
+        return txt.includes(q);
       });
 
-      // Sort: Stock items first, then alphabetical
-      filtered.sort((a,b) => {
-        if(a.stock === 0 && b.stock !== 0) return 1;
-        if(b.stock === 0 && a.stock !== 0) return -1;
-        return a.name.localeCompare(b.name);
-      });
-
+      // Clear
+      el.grid.innerHTML = '';
+      
       if (filtered.length === 0) {
-        el.grid.innerHTML = '';
-        el.empty.classList.remove('hidden');
+        document.getElementById('emptyState').classList.remove('hidden');
         return;
       }
+      document.getElementById('emptyState').classList.add('hidden');
 
-      el.empty.classList.add('hidden');
-      el.grid.innerHTML = filtered.map(item => createCard(item)).join('');
-      
-      // Re-attach events
-      document.querySelectorAll('.item-card').forEach(card => {
-        card.addEventListener('click', () => openModal(card.dataset.sku));
-      });
-    }
+      // Sort (Stock items first)
+      filtered.sort((a,b) => (b.stock === 0 ? -1 : 1));
 
-    function createCard(item) {
-      const stockClass = getStockBadgeClass(item.stock);
-      const stockText = item.stock === -1 ? 'INF' : item.stock;
-      const img = item.image ? item.image : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMxYTFhMWEiLz48dGV4dCB4PSI1MCIgeT0iNTUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiMzMzMiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5PIElNRzwvdGV4dD48L3N2Zz4=';
-      
-      return `
-        <article class="item-card group cursor-pointer" data-sku="${item.sku}">
-          <div class="badge-stock ${stockClass}">
-             ${item.stock === -1 ? '∞' : item.stock}
-          </div>
-          
-          <div class="img-wrapper bg-black">
-            <img src="${img}" class="img-zoom" alt="${item.name}" loading="lazy">
-            <div class="absolute inset-0 border border-white/5 pointer-events-none"></div>
-          </div>
-          
-          <div class="p-4 relative">
-            <div class="text-[9px] font-mono text-arc mb-1 tracking-widest uppercase">${item.category || 'GENERAL'}</div>
-            <h3 class="text-lg font-bold leading-tight mb-2 text-gray-100 group-hover:text-white truncate">${item.name}</h3>
-            
-            <div class="flex items-center justify-between border-t border-white/10 pt-3 mt-2">
-              <span class="font-mono text-sm text-gray-400">${item.sku}</span>
-              <span class="font-bold text-arc tracking-wide">${fmtMoney(item.priceCents, item.currency)}</span>
+      // Build HTML
+      filtered.forEach((item, idx) => {
+        const card = document.createElement('article');
+        card.className = "card-tech group cursor-pointer opacity-0"; // start hidden for gsap
+        card.onclick = () => openDrawer(item);
+        
+        const imgUrl = item.image ? item.image : null;
+        const imgBlock = imgUrl 
+          ? `<img src="${imgUrl}" class="card-img w-full h-full object-cover" alt="${item.name}">`
+          : `<div class="w-full h-full bg-[#111] flex items-center justify-center text-gray-700 font-mono text-xs">NO_IMAGE</div>`;
+
+        // Stock Logic
+        let stockColor = "text-white";
+        let stockText = item.stock;
+        if(item.stock === -1) { stockText = "∞"; stockColor = "text-neon"; }
+        else if(item.stock <= 0) { stockText = "OUT"; stockColor = "text-red-500"; }
+        else if(item.stock <= 5) { stockText = `${item.stock}`; stockColor = "text-orange-400"; }
+        else { stockText = `${item.stock}`; stockColor = "text-neon"; }
+
+        card.innerHTML = `
+          <div class="relative w-full aspect-[4/3] border-b border-[#222]">
+            ${imgBlock}
+            <div class="absolute top-2 right-2 bg-black/80 backdrop-blur border border-[#333] px-2 py-1">
+              <span class="font-mono text-xs font-bold ${stockColor}">${stockText}</span>
             </div>
           </div>
-        </article>
-      `;
+          <div class="p-4">
+             <div class="flex justify-between items-start mb-2">
+               <span class="text-[10px] text-gray-500 font-mono uppercase tracking-wider">${item.category || 'GEN'}</span>
+               <span class="text-[10px] text-gray-600 font-mono">${item.sku}</span>
+             </div>
+             <h3 class="font-display font-bold text-white text-lg leading-tight truncate mb-3 group-hover:text-neon transition-colors">${item.name}</h3>
+             <div class="w-full h-px bg-[#222] mb-3"></div>
+             <div class="font-mono font-bold text-gray-300 text-sm">
+               ${new Intl.NumberFormat('es-ES', { style: 'currency', currency: item.currency }).format(item.priceCents/100)}
+             </div>
+          </div>
+        `;
+        el.grid.appendChild(card);
+      });
+
+      // Animate Entrance
+      gsap.to(".card-tech", {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        stagger: 0.05,
+        ease: "power2.out",
+        startAt: { y: 20 }
+      });
     }
 
-    // MODAL LOGIC
-    function openModal(sku) {
-      const item = rawItems.find(i => i.sku === sku);
-      if(!item) return;
-
-      el.mName.textContent = item.name;
-      el.mCat.textContent = `// ${item.category || 'GENERAL'}`;
-      el.mPrice.textContent = fmtMoney(item.priceCents, item.currency);
-      el.mStock.innerHTML = getStockHtml(item.stock);
-      el.mSku.textContent = `SKU: ${item.sku}`;
-      el.mDesc.textContent = item.description || "No tactical data available.";
-      el.mUpdate.textContent = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '---';
+    // --- 4. DRAWER LOGIC ---
+    function openDrawer(item) {
+      el.dName.innerText = item.name;
+      el.dSku.innerText = item.sku;
+      el.dCat.innerText = item.category || 'General';
+      el.dPrice.innerText = new Intl.NumberFormat('es-ES', { style: 'currency', currency: item.currency }).format(item.priceCents/100);
+      el.dDesc.innerText = item.description || "No tactical data available.";
+      el.dUpdate.innerText = item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'N/A';
       
+      // Stock Badge HTML
+      if(item.stock === -1) el.dStock.innerHTML = `<span class="text-neon">UNLIMITED SUPPLY</span>`;
+      else if(item.stock <= 0) el.dStock.innerHTML = `<span class="text-red-500">DEPLETED</span>`;
+      else if(item.stock <= 5) el.dStock.innerHTML = `<span class="text-orange-400">CRITICAL LOW (${item.stock})</span>`;
+      else el.dStock.innerHTML = `<span class="text-neon">AVAILABLE (${item.stock})</span>`;
+
       if(item.image) {
-        el.mImage.style.backgroundImage = `url('${item.image}')`;
+        el.dImage.style.backgroundImage = `url('${item.image}')`;
       } else {
-        el.mImage.style.backgroundImage = 'none';
-        el.mImage.style.backgroundColor = '#111';
+        el.dImage.style.backgroundImage = 'none';
+        el.dImage.style.backgroundColor = '#111';
       }
 
-      el.modalBackdrop.classList.remove('hidden');
-      // Animation frame trick
-      requestAnimationFrame(() => {
-        el.modalPanel.classList.remove('opacity-0', 'scale-95');
-        el.modalPanel.classList.add('opacity-100', 'scale-100');
-      });
+      // Open Animation
+      el.drawerBack.classList.remove('hidden');
+      requestAnimationFrame(() => el.drawerBack.classList.remove('opacity-0'));
+      
+      gsap.to(el.drawer, { x: 0, duration: 0.5, ease: "expo.out" });
       document.body.style.overflow = 'hidden';
     }
 
-    function closeModal() {
-      el.modalPanel.classList.remove('opacity-100', 'scale-100');
-      el.modalPanel.classList.add('opacity-0', 'scale-95');
-      setTimeout(() => {
-        el.modalBackdrop.classList.add('hidden');
-        document.body.style.overflow = '';
-      }, 300);
+    function closeDrawer() {
+      gsap.to(el.drawer, { 
+        x: "100%", 
+        duration: 0.4, 
+        ease: "power2.in", 
+        onComplete: () => {
+           el.drawerBack.classList.add('opacity-0');
+           setTimeout(() => el.drawerBack.classList.add('hidden'), 300);
+           document.body.style.overflow = 'auto';
+        }
+      });
     }
 
-    el.modalClose.addEventListener('click', closeModal);
-    el.modalBackdrop.addEventListener('click', (e) => {
-      if(e.target === el.modalBackdrop) closeModal();
-    });
-    document.addEventListener('keydown', (e) => {
-      if(e.key === 'Escape') closeModal();
-    });
+    // --- EVENTS ---
+    el.search.addEventListener('input', renderGrid);
+    el.catSelect.addEventListener('change', renderGrid);
+    el.statSelect.addEventListener('change', renderGrid);
+    el.refreshBtn.addEventListener('click', loadData);
+    
+    el.closeDrawerBtn.addEventListener('click', closeDrawer);
+    el.drawerBack.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDrawer(); });
 
-    // EVENT LISTENERS
-    el.searchInput.addEventListener('input', () => render());
-    el.catSelect.addEventListener('change', () => render());
-    el.statSelect.addEventListener('change', () => render());
-    el.refreshBtn.addEventListener('click', () => {
-      el.refreshBtn.innerHTML = `SYNCING...`;
-      loadData().then(() => {
-        setTimeout(() => el.refreshBtn.innerHTML = `SYNC DATA <span class="text-arc">↻</span>`, 500);
-      });
-    });
+    // INIT
+    window.addEventListener('load', runBootSequence);
 
   </script>
 </body>
 </html>
-
