@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Union RP • Stock en tiempo real</title>
+  <meta name="description" content="Estado de stock del catálogo de Union RP." />
+  <meta name="theme-color" content="#0b1220" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root { color-scheme: dark; }
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  </style>
+</head>
+
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <!-- Top glow -->
+  <div class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="absolute -top-40 left-1/2 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl"></div>
+    <div class="absolute top-40 left-1/3 h-80 w-[34rem] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl"></div>
+  </div>
+
+  <header class="relative">
+    <div class="mx-auto max-w-7xl px-6 pt-10 pb-6">
+      <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            Live Stock • actualizado por el bot
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
+            Union RP <span class="text-indigo-300">Stock</span>
+          </h1>
+          <p class="max-w-2xl text-sm text-slate-300">
+            Catálogo con disponibilidad y precios. Los cambios se sincronizan automáticamente cada 10 minutos.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+            <div class="text-xs text-slate-400">Última sincronización</div>
+            <div id="lastUpdated" class="text-sm font-semibold">—</div>
+          </div>
+          <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+            <div class="text-xs text-slate-400">Items activos</div>
+            <div id="activeCount" class="text-sm font-semibold">—</div>
+          </div>
+          <button id="refreshBtn" class="rounded-xl bg-indigo-500/90 px-4 py-3 text-sm font-semibold hover:bg-indigo-500 active:scale-[.99] transition">
+            Refrescar
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative">
+    <div class="mx-auto max-w-7xl px-6 pb-14">
+      <!-- Controls -->
+      <div class="grid gap-3 md:grid-cols-12">
+        <div class="md:col-span-5">
+          <label class="text-xs text-slate-400">Buscar</label>
+          <input id="searchInput"
+            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-indigo-500/60"
+            placeholder="Buscar por nombre, SKU, categoría..."
+          />
+        </div>
+
+        <div class="md:col-span-3">
+          <label class="text-xs text-slate-400">Categoría</label>
+          <select id="categorySelect"
+            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-indigo-500/60">
+            <option value="All">Todas</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-xs text-slate-400">Estado</label>
+          <select id="statusSelect"
+            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-indigo-500/60">
+            <option value="all">Todos</option>
+            <option value="in">En stock</option>
+            <option value="low">Bajo</option>
+            <option value="out">Sin stock</option>
+            <option value="inf">Ilimitado</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-xs text-slate-400">Orden</label>
+          <select id="sortSelect"
+            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-indigo-500/60">
+            <option value="updated">Últimos cambios</option>
+            <option value="priceAsc">Precio ↑</option>
+            <option value="priceDesc">Precio ↓</option>
+            <option value="nameAsc">Nombre A→Z</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table card -->
+      <div class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_10px_30px_rgba(0,0,0,.35)]">
+        <div class="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+          <div class="text-sm font-semibold">Catálogo</div>
+          <div id="metaInfo" class="text-xs text-slate-400">—</div>
+        </div>
+
+        <div id="tableWrap" class="relative">
+          <!-- Loading skeleton -->
+          <div id="skeleton" class="p-5 space-y-3">
+            <div class="h-10 rounded-xl bg-white/5"></div>
+            <div class="h-10 rounded-xl bg-white/5"></div>
+            <div class="h-10 rounded-xl bg-white/5"></div>
+            <div class="h-10 rounded-xl bg-white/5"></div>
+          </div>
+
+          <table id="stockTable" class="hidden w-full text-left text-sm">
+            <thead class="bg-white/5 text-xs text-slate-300">
+              <tr>
+                <th class="px-5 py-3">Item</th>
+                <th class="px-5 py-3">Categoría</th>
+                <th class="px-5 py-3">SKU</th>
+                <th class="px-5 py-3">Precio</th>
+                <th class="px-5 py-3">Stock</th>
+                <th class="px-5 py-3">Actualizado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody" class="divide-y divide-white/10"></tbody>
+          </table>
+
+          <div id="emptyState" class="hidden p-10 text-center">
+            <div class="text-lg font-semibold">Sin resultados</div>
+            <div class="mt-1 text-sm text-slate-400">Prueba a cambiar filtros o búsqueda.</div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="mt-8 text-xs text-slate-500">
+        © Union RP • Stock publicado vía GitHub Pages • “source of truth” en el servidor del bot
+      </footer>
+    </div>
+  </main>
+
+<script>
+  const DATA_URL = "data/stock.json"; // mismo repo
+
+  const els = {
+    lastUpdated: document.getElementById("lastUpdated"),
+    activeCount: document.getElementById("activeCount"),
+    metaInfo: document.getElementById("metaInfo"),
+    refreshBtn: document.getElementById("refreshBtn"),
+    searchInput: document.getElementById("searchInput"),
+    categorySelect: document.getElementById("categorySelect"),
+    statusSelect: document.getElementById("statusSelect"),
+    sortSelect: document.getElementById("sortSelect"),
+    skeleton: document.getElementById("skeleton"),
+    table: document.getElementById("stockTable"),
+    tbody: document.getElementById("tbody"),
+    empty: document.getElementById("emptyState"),
+  };
+
+  let rawItems = [];
+
+  function money(cents, currency) {
+    const val = (Number(cents || 0) / 100).toFixed(2);
+    return `${val} ${(currency || "eur").toUpperCase()}`;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleString("es-ES", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+
+  function stockBadge(stock) {
+    if (stock === -1) return `<span class="inline-flex items-center rounded-full bg-cyan-500/15 px-2.5 py-1 text-xs font-semibold text-cyan-200 ring-1 ring-cyan-400/30">∞ Ilimitado</span>`;
+    if (stock <= 0) return `<span class="inline-flex items-center rounded-full bg-rose-500/15 px-2.5 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/30">Sin stock</span>`;
+    if (stock <= 5) return `<span class="inline-flex items-center rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200 ring-1 ring-amber-400/30">Bajo (${stock})</span>`;
+    return `<span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/30">En stock (${stock})</span>`;
+  }
+
+  function setLoading(on) {
+    els.skeleton.classList.toggle("hidden", !on);
+    els.table.classList.toggle("hidden", on);
+    els.empty.classList.add("hidden");
+  }
+
+  function buildCategoryOptions(items) {
+    const cats = Array.from(new Set(items.map(x => x.category || "General"))).sort((a,b)=>a.localeCompare(b));
+    els.categorySelect.innerHTML = `<option value="All">Todas</option>` + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function applyFilters() {
+    const q = els.searchInput.value.trim().toLowerCase();
+    const cat = els.categorySelect.value;
+    const st = els.statusSelect.value;
+    const sort = els.sortSelect.value;
+
+    let items = rawItems.filter(it => it.isActive);
+
+    if (cat !== "All") items = items.filter(it => (it.category || "General") === cat);
+
+    if (q) {
+      items = items.filter(it => {
+        const hay = `${it.name} ${it.sku} ${it.category}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    if (st !== "all") {
+      items = items.filter(it => {
+        if (st === "inf") return it.stock === -1;
+        if (st === "out") return it.stock !== -1 && it.stock <= 0;
+        if (st === "low") return it.stock !== -1 && it.stock > 0 && it.stock <= 5;
+        if (st === "in") return it.stock !== -1 && it.stock > 5;
+        return true;
+      });
+    }
+
+    // sort
+    items.sort((a,b) => {
+      if (sort === "priceAsc") return (a.priceCents||0) - (b.priceCents||0);
+      if (sort === "priceDesc") return (b.priceCents||0) - (a.priceCents||0);
+      if (sort === "nameAsc") return String(a.name||"").localeCompare(String(b.name||""));
+      // updated
+      return new Date(b.updatedAt||0) - new Date(a.updatedAt||0);
+    });
+
+    renderTable(items);
+  }
+
+  function renderTable(items) {
+    els.tbody.innerHTML = "";
+
+    els.metaInfo.textContent = `${items.length} resultados`;
+
+    if (!items.length) {
+      els.table.classList.add("hidden");
+      els.empty.classList.remove("hidden");
+      return;
+    }
+
+    els.table.classList.remove("hidden");
+    els.empty.classList.add("hidden");
+
+    for (const it of items) {
+      const tr = document.createElement("tr");
+      tr.className = "hover:bg-white/5 transition";
+
+      tr.innerHTML = `
+        <td class="px-5 py-4">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-white/5 ring-1 ring-white/10 overflow-hidden flex items-center justify-center">
+              ${it.image ? `<img src="${escapeHtml(it.image)}" class="h-full w-full object-cover" />`
+                        : `<div class="text-xs text-slate-400">IMG</div>`}
+            </div>
+            <div>
+              <div class="font-semibold">${escapeHtml(it.name)}</div>
+              <div class="text-xs text-slate-400">${escapeHtml(it.isActive ? "Activo" : "Inactivo")}</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-5 py-4 text-slate-200">${escapeHtml(it.category || "General")}</td>
+        <td class="px-5 py-4 font-mono text-xs text-slate-300">${escapeHtml(it.sku)}</td>
+        <td class="px-5 py-4">${money(it.priceCents, it.currency)}</td>
+        <td class="px-5 py-4">${stockBadge(it.stock)}</td>
+        <td class="px-5 py-4 text-slate-300">${fmtDate(it.updatedAt)}</td>
+      `;
+      els.tbody.appendChild(tr);
+    }
+  }
+
+  async function load() {
+    setLoading(true);
+
+    // Cache-busting para evitar cachés agresivas en Pages
+    const url = `${DATA_URL}?t=${Date.now()}`;
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`No se pudo cargar stock.json (${res.status})`);
+
+    const data = await res.json();
+    rawItems = Array.isArray(data.items) ? data.items : [];
+
+    els.lastUpdated.textContent = fmtDate(data.generatedAt);
+    const active = rawItems.filter(x => x.isActive).length;
+    els.activeCount.textContent = String(active);
+
+    buildCategoryOptions(rawItems);
+
+    setLoading(false);
+    applyFilters();
+  }
+
+  // events
+  els.refreshBtn.addEventListener("click", load);
+  els.searchInput.addEventListener("input", () => applyFilters());
+  els.categorySelect.addEventListener("change", () => applyFilters());
+  els.statusSelect.addEventListener("change", () => applyFilters());
+  els.sortSelect.addEventListener("change", () => applyFilters());
+
+  load().catch(err => {
+    setLoading(false);
+    els.metaInfo.textContent = "Error cargando datos";
+    els.empty.classList.remove("hidden");
+    els.empty.innerHTML = `<div class="text-lg font-semibold">Error</div><div class="mt-1 text-sm text-slate-400">${escapeHtml(err.message)}</div>`;
+  });
+</script>
+</body>
+</html>
