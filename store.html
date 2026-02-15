@@ -3,57 +3,119 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MK Store · Stock en tiempo real</title>
+  <title>MK Store · Stock Live</title>
   <meta name="description" content="Estado de stock del catálogo de Union RP." />
   <meta name="theme-color" content="#0b1220" />
+  <meta name="color-scheme" content="dark" />
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Inter font -->
+  <!-- Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root { color-scheme: dark; }
     body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+    /* Smooth in */
+    .fade-in { animation: fade .6s ease both; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Stagger */
+    .stagger > * { opacity: 0; transform: translateY(8px); animation: fade .55s ease both; }
+    .stagger > *:nth-child(1){ animation-delay: .02s }
+    .stagger > *:nth-child(2){ animation-delay: .06s }
+    .stagger > *:nth-child(3){ animation-delay: .10s }
+    .stagger > *:nth-child(4){ animation-delay: .14s }
+    .stagger > *:nth-child(5){ animation-delay: .18s }
+    .stagger > *:nth-child(6){ animation-delay: .22s }
+    .stagger > *:nth-child(7){ animation-delay: .26s }
+    .stagger > *:nth-child(8){ animation-delay: .30s }
+
+    /* Fancy shimmer skeleton */
+    .shimmer {
+      background: linear-gradient(110deg, rgba(255,255,255,.04) 8%, rgba(255,255,255,.09) 18%, rgba(255,255,255,.04) 33%);
+      background-size: 200% 100%;
+      animation: shine 1.25s linear infinite;
+    }
+    @keyframes shine { to { background-position-x: -200%; } }
+
+    /* Drawer */
+    .drawer-backdrop { opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+    .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+    .drawer-panel { transform: translateX(100%); transition: transform .25s ease; }
+    .drawer-panel.open { transform: translateX(0); }
+
+    /* Toast */
+    .toast { transform: translateY(10px); opacity: 0; transition: .25s ease; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Focus ring */
+    .focus-ring:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,.35); border-color: rgba(99,102,241,.6); }
   </style>
+
+  <script>
+    // Tailwind theme (CDN config)
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            glow: "0 0 0 1px rgba(255,255,255,.08), 0 24px 60px rgba(0,0,0,.55)",
+          }
+        }
+      }
+    }
+  </script>
 </head>
 
 <body class="min-h-screen bg-slate-950 text-slate-100">
-  <!-- Top glow -->
+
+  <!-- Background -->
   <div class="pointer-events-none fixed inset-0 overflow-hidden">
-    <div class="absolute -top-40 left-1/2 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl"></div>
-    <div class="absolute top-40 left-1/3 h-80 w-[34rem] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl"></div>
+    <div class="absolute -top-44 left-1/2 h-[34rem] w-[52rem] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl"></div>
+    <div class="absolute top-24 left-1/3 h-[28rem] w-[42rem] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 h-[22rem] w-[34rem] rounded-full bg-fuchsia-500/10 blur-3xl"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,.06),transparent_45%)]"></div>
   </div>
 
-  <header class="relative">
-    <div class="mx-auto max-w-7xl px-6 pt-10 pb-6">
-      <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div class="space-y-2">
-          <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
-            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-            Live Stock
+  <!-- Top bar -->
+  <header class="relative border-b border-white/10 bg-black/20 backdrop-blur">
+    <div class="mx-auto max-w-7xl px-6 py-5">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-11 w-11 rounded-2xl bg-white/5 ring-1 ring-white/10 grid place-items-center shadow-glow">
+            <span class="text-lg">🛒</span>
           </div>
-          <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
-            MK Store <span class="text-indigo-300">Stock</span>
-          </h1>
-          <p class="max-w-2xl text-sm text-slate-300">
-            Catálogo con disponibilidad y precios. Los cambios se sincronizan automáticamente cada 10 minutos.
-          </p>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg font-extrabold tracking-tight">
+                MK Store <span class="text-indigo-300">Live Stock</span>
+              </h1>
+              <span id="netBadge" class="hidden rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-200">
+                <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1 align-middle"></span>
+                Online
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">Dashboard profesional de stock y catálogo (GitHub Pages + JSON).</p>
+          </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <div class="text-xs text-slate-400">Última sincronización</div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div class="text-[11px] text-slate-400">Última sync</div>
             <div id="lastUpdated" class="text-sm font-semibold">—</div>
           </div>
-          <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <div class="text-xs text-slate-400">Items activos</div>
+
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div class="text-[11px] text-slate-400">Items activos</div>
             <div id="activeCount" class="text-sm font-semibold">—</div>
           </div>
-          <button id="refreshBtn" class="rounded-xl bg-indigo-500/90 px-4 py-3 text-sm font-semibold hover:bg-indigo-500 active:scale-[.99] transition">
+
+          <button id="refreshBtn"
+            class="rounded-2xl bg-indigo-500/90 px-4 py-3 text-sm font-semibold hover:bg-indigo-500 active:scale-[.99] transition shadow-glow">
             Refrescar
           </button>
         </div>
@@ -62,21 +124,57 @@
   </header>
 
   <main class="relative">
-    <div class="mx-auto max-w-7xl px-6 pb-14">
+    <div class="mx-auto max-w-7xl px-6 py-8">
+
+      <!-- KPI Row -->
+      <section class="grid gap-3 md:grid-cols-12 fade-in">
+        <div class="md:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-glow">
+          <div class="text-xs text-slate-400">Total items</div>
+          <div id="kpiTotal" class="mt-1 text-2xl font-extrabold">—</div>
+          <div class="mt-3 h-10 w-full rounded-xl bg-white/5 ring-1 ring-white/10 overflow-hidden">
+            <svg id="sparkTotal" viewBox="0 0 120 40" class="h-full w-full">
+              <path d="" fill="none" stroke="rgba(99,102,241,.8)" stroke-width="2"></path>
+              <path d="" fill="rgba(99,102,241,.18)"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="md:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-glow">
+          <div class="text-xs text-slate-400">Sin stock</div>
+          <div id="kpiOut" class="mt-1 text-2xl font-extrabold">—</div>
+          <div class="mt-2 text-xs text-slate-400">Items con stock = 0</div>
+        </div>
+
+        <div class="md:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-glow">
+          <div class="text-xs text-slate-400">Bajo stock</div>
+          <div id="kpiLow" class="mt-1 text-2xl font-extrabold">—</div>
+          <div class="mt-2 text-xs text-slate-400">≤ 5 unidades</div>
+        </div>
+
+        <div class="md:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-glow">
+          <div class="text-xs text-slate-400">Ilimitados</div>
+          <div id="kpiInf" class="mt-1 text-2xl font-extrabold">—</div>
+          <div class="mt-2 text-xs text-slate-400">Stock = ∞</div>
+        </div>
+      </section>
+
       <!-- Controls -->
-      <div class="grid gap-3 md:grid-cols-12">
+      <section class="mt-6 grid gap-3 md:grid-cols-12 fade-in">
         <div class="md:col-span-5">
           <label class="text-xs text-slate-400">Buscar</label>
-          <input id="searchInput"
-            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-indigo-500/60"
-            placeholder="Buscar por nombre, SKU, categoría..."
-          />
+          <div class="mt-1 relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">⌕</span>
+            <input id="searchInput"
+              class="focus-ring w-full rounded-2xl border border-white/10 bg-white/5 pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-500"
+              placeholder="Buscar por nombre, SKU, categoría..."
+            />
+          </div>
         </div>
 
         <div class="md:col-span-3">
           <label class="text-xs text-slate-400">Categoría</label>
           <select id="categorySelect"
-            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-indigo-500/60">
+            class="focus-ring mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
             <option value="All">Todas</option>
           </select>
         </div>
@@ -84,7 +182,7 @@
         <div class="md:col-span-2">
           <label class="text-xs text-slate-400">Estado</label>
           <select id="statusSelect"
-            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-indigo-500/60">
+            class="focus-ring mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
             <option value="all">Todos</option>
             <option value="in">En stock</option>
             <option value="low">Bajo</option>
@@ -94,79 +192,269 @@
         </div>
 
         <div class="md:col-span-2">
+          <label class="text-xs text-slate-400">Vista</label>
+          <div class="mt-1 grid grid-cols-2 gap-2">
+            <button id="viewCards" class="rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10 transition">Cards</button>
+            <button id="viewTable" class="rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold hover:bg-white/10 transition">Tabla</button>
+          </div>
+        </div>
+
+        <div class="md:col-span-4">
           <label class="text-xs text-slate-400">Orden</label>
           <select id="sortSelect"
-            class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-indigo-500/60">
+            class="focus-ring mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
             <option value="updated">Últimos cambios</option>
             <option value="priceAsc">Precio ↑</option>
             <option value="priceDesc">Precio ↓</option>
             <option value="nameAsc">Nombre A→Z</option>
           </select>
         </div>
-      </div>
 
-      <!-- Table card -->
-      <div class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_10px_30px_rgba(0,0,0,.35)]">
-        <div class="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <div class="text-sm font-semibold">Catálogo</div>
-          <div id="metaInfo" class="text-xs text-slate-400">—</div>
-        </div>
-
-        <div id="tableWrap" class="relative">
-          <!-- Loading skeleton -->
-          <div id="skeleton" class="p-5 space-y-3">
-            <div class="h-10 rounded-xl bg-white/5"></div>
-            <div class="h-10 rounded-xl bg-white/5"></div>
-            <div class="h-10 rounded-xl bg-white/5"></div>
-            <div class="h-10 rounded-xl bg-white/5"></div>
-          </div>
-
-          <table id="stockTable" class="hidden w-full text-left text-sm">
-            <thead class="bg-white/5 text-xs text-slate-300">
-              <tr>
-                <th class="px-5 py-3">Item</th>
-                <th class="px-5 py-3">Categoría</th>
-                <th class="px-5 py-3">SKU</th>
-                <th class="px-5 py-3">Precio</th>
-                <th class="px-5 py-3">Stock</th>
-                <th class="px-5 py-3">Actualizado</th>
-              </tr>
-            </thead>
-            <tbody id="tbody" class="divide-y divide-white/10"></tbody>
-          </table>
-
-          <div id="emptyState" class="hidden p-10 text-center">
-            <div class="text-lg font-semibold">Sin resultados</div>
-            <div class="mt-1 text-sm text-slate-400">Prueba a cambiar filtros o búsqueda.</div>
+        <div class="md:col-span-4">
+          <label class="text-xs text-slate-400">Auto refresh</label>
+          <div class="mt-1 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2">
+            <button id="autoToggle" class="rounded-xl px-4 py-2 text-sm font-semibold bg-white/5 hover:bg-white/10 transition border border-white/10">
+              OFF
+            </button>
+            <select id="autoEvery" class="focus-ring w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
+              <option value="600000">10 min</option>
+              <option value="300000">5 min</option>
+              <option value="120000">2 min</option>
+              <option value="60000">1 min</option>
+            </select>
+            <div id="nextTick" class="text-xs text-slate-400 whitespace-nowrap pr-2">—</div>
           </div>
         </div>
-      </div>
 
-      <footer class="mt-8 text-xs text-slate-500">
-        © MK Store
+        <div class="md:col-span-4">
+          <label class="text-xs text-slate-400">Acciones</label>
+          <div class="mt-1 flex gap-2">
+            <button id="clearFilters" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10 transition">
+              Limpiar filtros
+            </button>
+            <button id="exportBtn" class="w-full rounded-2xl bg-emerald-500/80 px-4 py-3 text-sm font-semibold hover:bg-emerald-500 transition">
+              Exportar JSON
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Active filter chips -->
+      <section class="mt-4 flex flex-wrap gap-2 text-xs text-slate-300 fade-in" id="chips"></section>
+
+      <!-- Content -->
+      <section class="mt-6">
+        <!-- Skeleton -->
+        <div id="skeleton" class="grid gap-3 md:grid-cols-3">
+          <div class="h-28 rounded-2xl border border-white/10 bg-white/5 shimmer"></div>
+          <div class="h-28 rounded-2xl border border-white/10 bg-white/5 shimmer"></div>
+          <div class="h-28 rounded-2xl border border-white/10 bg-white/5 shimmer"></div>
+          <div class="h-28 rounded-2xl border border-white/10 bg-white/5 shimmer"></div>
+          <div class="h-28 rounded-2xl border border-white/10 bg-white/5 shimmer"></div>
+          <div class="h-28 rounded-2xl border border-white/10 bg-white/5 shimmer"></div>
+        </div>
+
+        <!-- Cards -->
+        <div id="cardsWrap" class="hidden">
+          <div class="flex items-center justify-between text-xs text-slate-400 mb-3">
+            <div id="metaInfo">—</div>
+            <div class="flex items-center gap-2">
+              <span id="netText">—</span>
+            </div>
+          </div>
+          <div id="cards" class="grid gap-3 md:grid-cols-3 stagger"></div>
+        </div>
+
+        <!-- Table -->
+        <div id="tableWrap" class="hidden overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-glow">
+          <div class="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+            <div class="text-sm font-semibold">Catálogo</div>
+            <div id="metaInfo2" class="text-xs text-slate-400">—</div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-white/5 text-xs text-slate-300">
+                <tr>
+                  <th class="px-5 py-3">Item</th>
+                  <th class="px-5 py-3">Categoría</th>
+                  <th class="px-5 py-3">SKU</th>
+                  <th class="px-5 py-3">Precio</th>
+                  <th class="px-5 py-3">Stock</th>
+                  <th class="px-5 py-3">Actualizado</th>
+                </tr>
+              </thead>
+              <tbody id="tbody" class="divide-y divide-white/10"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Empty/Error -->
+        <div id="emptyState" class="hidden mt-10 rounded-2xl border border-white/10 bg-white/5 p-10 text-center shadow-glow">
+          <div id="emptyTitle" class="text-lg font-semibold">Sin resultados</div>
+          <div id="emptyDesc" class="mt-1 text-sm text-slate-400">Prueba a cambiar filtros o búsqueda.</div>
+          <button id="emptyReload" class="mt-4 rounded-2xl bg-indigo-500/90 px-4 py-3 text-sm font-semibold hover:bg-indigo-500 transition">
+            Reintentar
+          </button>
+        </div>
+      </section>
+
+      <footer class="mt-10 text-xs text-slate-500">
+        © MK Store · Union RP
       </footer>
     </div>
   </main>
 
+  <!-- Drawer -->
+  <div id="drawerBackdrop" class="drawer-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-sm">
+    <div class="absolute inset-0" id="drawerCloseArea"></div>
+    <aside id="drawerPanel" class="drawer-panel absolute right-0 top-0 h-full w-full max-w-lg bg-slate-950 border-l border-white/10 shadow-glow">
+      <div class="p-6 flex items-start justify-between gap-3 border-b border-white/10">
+        <div>
+          <div class="text-xs text-slate-400">Detalle del item</div>
+          <h2 id="dName" class="mt-1 text-xl font-extrabold tracking-tight">—</h2>
+        </div>
+        <button id="drawerCloseBtn" class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 transition">✕</button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <div class="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+          <div id="dImageWrap" class="h-56 bg-white/5 grid place-items-center text-slate-500">Sin imagen</div>
+        </div>
+
+        <div class="flex flex-wrap gap-2" id="dBadges"></div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div class="text-xs text-slate-400">SKU</div>
+            <div class="mt-1 font-mono text-sm" id="dSku">—</div>
+            <button id="copySku" class="mt-2 text-xs text-indigo-300 hover:text-indigo-200">Copiar</button>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div class="text-xs text-slate-400">Categoría</div>
+            <div class="mt-1 text-sm font-semibold" id="dCategory">—</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div class="text-xs text-slate-400">Precio</div>
+            <div class="mt-1 text-sm font-semibold" id="dPrice">—</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div class="text-xs text-slate-400">Actualizado</div>
+            <div class="mt-1 text-sm font-semibold" id="dUpdated">—</div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div class="text-xs text-slate-400">Descripción</div>
+          <div id="dDesc" class="mt-2 text-sm text-slate-200 whitespace-pre-line">—</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Toast -->
+  <div class="fixed bottom-6 left-1/2 z-[60] w-[92%] max-w-md -translate-x-1/2 space-y-2">
+    <div id="toast" class="toast rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-glow backdrop-blur">
+      <div class="flex items-start gap-3">
+        <div id="toastDot" class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-400"></div>
+        <div class="min-w-0">
+          <div id="toastTitle" class="text-sm font-semibold">—</div>
+          <div id="toastMsg" class="text-xs text-slate-300">—</div>
+        </div>
+        <button id="toastClose" class="ml-auto text-slate-400 hover:text-slate-200">✕</button>
+      </div>
+    </div>
+  </div>
+
 <script>
+  // =========================
+  // CONFIG
+  // =========================
   const DATA_URL = "data/stock.json"; // mismo repo
 
-  const els = {
+  // =========================
+  // ELEMENTS
+  // =========================
+  const el = {
+    netBadge: document.getElementById("netBadge"),
+    netText: document.getElementById("netText"),
     lastUpdated: document.getElementById("lastUpdated"),
     activeCount: document.getElementById("activeCount"),
-    metaInfo: document.getElementById("metaInfo"),
+
+    kpiTotal: document.getElementById("kpiTotal"),
+    kpiOut: document.getElementById("kpiOut"),
+    kpiLow: document.getElementById("kpiLow"),
+    kpiInf: document.getElementById("kpiInf"),
+    sparkTotal: document.getElementById("sparkTotal").querySelector("path"),
+
     refreshBtn: document.getElementById("refreshBtn"),
     searchInput: document.getElementById("searchInput"),
     categorySelect: document.getElementById("categorySelect"),
     statusSelect: document.getElementById("statusSelect"),
     sortSelect: document.getElementById("sortSelect"),
+
+    viewCards: document.getElementById("viewCards"),
+    viewTable: document.getElementById("viewTable"),
+
+    autoToggle: document.getElementById("autoToggle"),
+    autoEvery: document.getElementById("autoEvery"),
+    nextTick: document.getElementById("nextTick"),
+
+    clearFilters: document.getElementById("clearFilters"),
+    exportBtn: document.getElementById("exportBtn"),
+    chips: document.getElementById("chips"),
+
     skeleton: document.getElementById("skeleton"),
-    table: document.getElementById("stockTable"),
+    cardsWrap: document.getElementById("cardsWrap"),
+    cards: document.getElementById("cards"),
+    tableWrap: document.getElementById("tableWrap"),
     tbody: document.getElementById("tbody"),
-    empty: document.getElementById("emptyState"),
+    metaInfo: document.getElementById("metaInfo"),
+    metaInfo2: document.getElementById("metaInfo2"),
+
+    emptyState: document.getElementById("emptyState"),
+    emptyTitle: document.getElementById("emptyTitle"),
+    emptyDesc: document.getElementById("emptyDesc"),
+    emptyReload: document.getElementById("emptyReload"),
+
+    drawerBackdrop: document.getElementById("drawerBackdrop"),
+    drawerPanel: document.getElementById("drawerPanel"),
+    drawerCloseArea: document.getElementById("drawerCloseArea"),
+    drawerCloseBtn: document.getElementById("drawerCloseBtn"),
+
+    dName: document.getElementById("dName"),
+    dImageWrap: document.getElementById("dImageWrap"),
+    dBadges: document.getElementById("dBadges"),
+    dSku: document.getElementById("dSku"),
+    copySku: document.getElementById("copySku"),
+    dCategory: document.getElementById("dCategory"),
+    dPrice: document.getElementById("dPrice"),
+    dUpdated: document.getElementById("dUpdated"),
+    dDesc: document.getElementById("dDesc"),
+
+    toast: document.getElementById("toast"),
+    toastDot: document.getElementById("toastDot"),
+    toastTitle: document.getElementById("toastTitle"),
+    toastMsg: document.getElementById("toastMsg"),
+    toastClose: document.getElementById("toastClose"),
   };
 
+  // =========================
+  // STATE
+  // =========================
   let rawItems = [];
+  let viewMode = localStorage.getItem("viewMode") || "cards";
+  let autoOn = localStorage.getItem("autoOn") === "1";
+  let autoTimer = null;
+  let nextTickTimer = null;
+  let nextAt = null;
+  let historyTotals = JSON.parse(localStorage.getItem("historyTotals") || "[]"); // sparkline
+
+  // =========================
+  // HELPERS
+  // =========================
+  const escapeHtml = (s) =>
+    String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
   function money(cents, currency) {
     const val = (Number(cents || 0) / 100).toFixed(2);
@@ -179,33 +467,134 @@
     return d.toLocaleString("es-ES", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
   }
 
-  function stockBadge(stock) {
+  function stockBadgeHtml(stock) {
     if (stock === -1) return `<span class="inline-flex items-center rounded-full bg-cyan-500/15 px-2.5 py-1 text-xs font-semibold text-cyan-200 ring-1 ring-cyan-400/30">∞ Ilimitado</span>`;
     if (stock <= 0) return `<span class="inline-flex items-center rounded-full bg-rose-500/15 px-2.5 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/30">Sin stock</span>`;
     if (stock <= 5) return `<span class="inline-flex items-center rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200 ring-1 ring-amber-400/30">Bajo (${stock})</span>`;
     return `<span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/30">En stock (${stock})</span>`;
   }
 
+  function showToast(type, title, msg) {
+    // type: ok | warn | err | info
+    const map = {
+      ok: "bg-emerald-400",
+      warn: "bg-amber-400",
+      err: "bg-rose-400",
+      info: "bg-indigo-400",
+    };
+    el.toastDot.className = `mt-1 h-2.5 w-2.5 rounded-full ${map[type] || map.info}`;
+    el.toastTitle.textContent = title || "Aviso";
+    el.toastMsg.textContent = msg || "";
+    el.toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => el.toast.classList.remove("show"), 3200);
+  }
+
+  el.toastClose.addEventListener("click", () => el.toast.classList.remove("show"));
+
   function setLoading(on) {
-    els.skeleton.classList.toggle("hidden", !on);
-    els.table.classList.toggle("hidden", on);
-    els.empty.classList.add("hidden");
+    el.skeleton.classList.toggle("hidden", !on);
+    el.cardsWrap.classList.add("hidden");
+    el.tableWrap.classList.add("hidden");
+    el.emptyState.classList.add("hidden");
+  }
+
+  function setView(mode) {
+    viewMode = mode;
+    localStorage.setItem("viewMode", mode);
+    el.viewCards.classList.toggle("bg-white/10", mode === "cards");
+    el.viewTable.classList.toggle("bg-white/10", mode === "table");
+    render();
   }
 
   function buildCategoryOptions(items) {
-    const cats = Array.from(new Set(items.map(x => x.category || "General"))).sort((a,b)=>a.localeCompare(b));
-    els.categorySelect.innerHTML = `<option value="All">Todas</option>` + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    const cats = Array.from(new Set(items.map(x => x.category || "General")))
+      .sort((a,b)=>a.localeCompare(b));
+    el.categorySelect.innerHTML =
+      `<option value="All">Todas</option>` + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function buildChips() {
+    const chips = [];
+    const q = el.searchInput.value.trim();
+    const cat = el.categorySelect.value;
+    const st = el.statusSelect.value;
+    const sort = el.sortSelect.value;
+
+    if (q) chips.push({ k: "q", label: `Buscar: "${q}"` });
+    if (cat !== "All") chips.push({ k: "cat", label: `Categoría: ${cat}` });
+
+    const stLabel = { in:"En stock", low:"Bajo", out:"Sin stock", inf:"Ilimitado" }[st];
+    if (st !== "all") chips.push({ k: "st", label: `Estado: ${stLabel}` });
+
+    const sortLabel = { updated:"Últimos cambios", priceAsc:"Precio ↑", priceDesc:"Precio ↓", nameAsc:"Nombre A→Z" }[sort];
+    if (sort !== "updated") chips.push({ k: "sort", label: `Orden: ${sortLabel}` });
+
+    el.chips.innerHTML = chips.map(c => `
+      <button data-chip="${c.k}" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition">
+        ${escapeHtml(c.label)} <span class="text-slate-400 ml-1">✕</span>
+      </button>
+    `).join("");
+
+    el.chips.querySelectorAll("button[data-chip]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const k = btn.getAttribute("data-chip");
+        if (k === "q") el.searchInput.value = "";
+        if (k === "cat") el.categorySelect.value = "All";
+        if (k === "st") el.statusSelect.value = "all";
+        if (k === "sort") el.sortSelect.value = "updated";
+        render();
+      });
+    });
+  }
+
+  function computeKPIs(items) {
+    const total = items.length;
+    const active = items.filter(x => x.isActive).length;
+    const out = items.filter(x => x.isActive && x.stock !== -1 && x.stock <= 0).length;
+    const low = items.filter(x => x.isActive && x.stock !== -1 && x.stock > 0 && x.stock <= 5).length;
+    const inf = items.filter(x => x.isActive && x.stock === -1).length;
+
+    el.kpiTotal.textContent = total;
+    el.kpiOut.textContent = out;
+    el.kpiLow.textContent = low;
+    el.kpiInf.textContent = inf;
+
+    el.activeCount.textContent = active;
+
+    // sparkline history
+    historyTotals.push(total);
+    historyTotals = historyTotals.slice(-20);
+    localStorage.setItem("historyTotals", JSON.stringify(historyTotals));
+    drawSparkline(historyTotals);
+  }
+
+  function drawSparkline(vals) {
+    const w = 120, h = 40;
+    if (!vals.length) return;
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const range = Math.max(1, max - min);
+
+    const pts = vals.map((v, i) => {
+      const x = (i / (vals.length - 1 || 1)) * (w - 6) + 3;
+      const y = h - 4 - ((v - min) / range) * (h - 10);
+      return [x, y];
+    });
+
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+    const area = `M${pts[0][0].toFixed(1)},${h} ` + pts.map(p => `L${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ") + ` L${pts[pts.length-1][0].toFixed(1)},${h} Z`;
+
+    const paths = document.querySelectorAll("#sparkTotal path");
+    paths[0].setAttribute("d", d);
+    paths[1].setAttribute("d", area);
   }
 
   function applyFilters() {
-    const q = els.searchInput.value.trim().toLowerCase();
-    const cat = els.categorySelect.value;
-    const st = els.statusSelect.value;
-    const sort = els.sortSelect.value;
+    const q = el.searchInput.value.trim().toLowerCase();
+    const cat = el.categorySelect.value;
+    const st = el.statusSelect.value;
+    const sort = el.sortSelect.value;
 
     let items = rawItems.filter(it => it.isActive);
 
@@ -228,36 +617,103 @@
       });
     }
 
-    // sort
     items.sort((a,b) => {
       if (sort === "priceAsc") return (a.priceCents||0) - (b.priceCents||0);
       if (sort === "priceDesc") return (b.priceCents||0) - (a.priceCents||0);
       if (sort === "nameAsc") return String(a.name||"").localeCompare(String(b.name||""));
-      // updated
       return new Date(b.updatedAt||0) - new Date(a.updatedAt||0);
     });
 
-    renderTable(items);
+    return items;
+  }
+
+  function openDrawer(item) {
+    el.dName.textContent = item.name || "—";
+    el.dSku.textContent = item.sku || "—";
+    el.dCategory.textContent = item.category || "General";
+    el.dPrice.textContent = money(item.priceCents, item.currency);
+    el.dUpdated.textContent = fmtDate(item.updatedAt);
+    el.dDesc.textContent = item.description || "—";
+
+    el.dBadges.innerHTML = [
+      stockBadgeHtml(item.stock),
+      item.isActive
+        ? `<span class="inline-flex items-center rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/30">Activo</span>`
+        : `<span class="inline-flex items-center rounded-full bg-rose-500/15 px-2.5 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/30">Inactivo</span>`
+    ].join("");
+
+    if (item.image) {
+      el.dImageWrap.innerHTML = `<img src="${escapeHtml(item.image)}" class="h-full w-full object-cover" alt="img">`;
+    } else {
+      el.dImageWrap.innerHTML = `<div class="text-slate-500">Sin imagen</div>`;
+      el.dImageWrap.className = "h-56 bg-white/5 grid place-items-center text-slate-500";
+    }
+
+    el.drawerBackdrop.classList.add("open");
+    el.drawerPanel.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeDrawer() {
+    el.drawerBackdrop.classList.remove("open");
+    el.drawerPanel.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  el.drawerCloseArea.addEventListener("click", closeDrawer);
+  el.drawerCloseBtn.addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+
+  el.copySku.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(el.dSku.textContent || "");
+      showToast("ok", "Copiado", "SKU copiado al portapapeles.");
+    } catch {
+      showToast("warn", "No se pudo copiar", "Tu navegador no permite clipboard aquí.");
+    }
+  });
+
+  function renderCards(items) {
+    el.cards.innerHTML = "";
+    for (const it of items) {
+      const card = document.createElement("button");
+      card.className =
+        "text-left group rounded-2xl border border-white/10 bg-white/5 p-4 shadow-glow hover:bg-white/10 transition active:scale-[.995]";
+      card.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="h-12 w-12 rounded-2xl bg-white/5 ring-1 ring-white/10 overflow-hidden grid place-items-center">
+            ${it.image ? `<img src="${escapeHtml(it.image)}" class="h-full w-full object-cover" />`
+                      : `<span class="text-xs text-slate-500">IMG</span>`}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="truncate font-extrabold tracking-tight">${escapeHtml(it.name)}</div>
+                <div class="mt-1 text-xs text-slate-400 truncate">${escapeHtml(it.category || "General")} · <span class="font-mono">${escapeHtml(it.sku)}</span></div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-bold text-slate-100">${money(it.priceCents, it.currency)}</div>
+                <div class="mt-2">${stockBadgeHtml(it.stock)}</div>
+              </div>
+            </div>
+            <div class="mt-3 text-sm text-slate-200 line-clamp-2">${escapeHtml(it.description || "—")}</div>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+              <span>Actualizado: <span class="text-slate-300 font-semibold">${fmtDate(it.updatedAt)}</span></span>
+              <span class="text-indigo-300 group-hover:text-indigo-200 transition">Ver detalle →</span>
+            </div>
+          </div>
+        </div>
+      `;
+      card.addEventListener("click", () => openDrawer(it));
+      el.cards.appendChild(card);
+    }
   }
 
   function renderTable(items) {
-    els.tbody.innerHTML = "";
-
-    els.metaInfo.textContent = `${items.length} resultados`;
-
-    if (!items.length) {
-      els.table.classList.add("hidden");
-      els.empty.classList.remove("hidden");
-      return;
-    }
-
-    els.table.classList.remove("hidden");
-    els.empty.classList.add("hidden");
-
+    el.tbody.innerHTML = "";
     for (const it of items) {
       const tr = document.createElement("tr");
-      tr.className = "hover:bg-white/5 transition";
-
+      tr.className = "hover:bg-white/5 transition cursor-pointer";
       tr.innerHTML = `
         <td class="px-5 py-4">
           <div class="flex items-center gap-3">
@@ -274,51 +730,176 @@
         <td class="px-5 py-4 text-slate-200">${escapeHtml(it.category || "General")}</td>
         <td class="px-5 py-4 font-mono text-xs text-slate-300">${escapeHtml(it.sku)}</td>
         <td class="px-5 py-4">${money(it.priceCents, it.currency)}</td>
-        <td class="px-5 py-4">${stockBadge(it.stock)}</td>
+        <td class="px-5 py-4">${stockBadgeHtml(it.stock)}</td>
         <td class="px-5 py-4 text-slate-300">${fmtDate(it.updatedAt)}</td>
       `;
-      els.tbody.appendChild(tr);
+      tr.addEventListener("click", () => openDrawer(it));
+      el.tbody.appendChild(tr);
     }
+  }
+
+  function render() {
+    buildChips();
+    const items = applyFilters();
+
+    const meta = `${items.length} resultados · Vista: ${viewMode === "cards" ? "Cards" : "Tabla"}`;
+    el.metaInfo.textContent = meta;
+    el.metaInfo2.textContent = meta;
+
+    if (!items.length) {
+      el.cardsWrap.classList.add("hidden");
+      el.tableWrap.classList.add("hidden");
+      el.emptyState.classList.remove("hidden");
+      el.emptyTitle.textContent = "Sin resultados";
+      el.emptyDesc.textContent = "Prueba a cambiar filtros o búsqueda.";
+      return;
+    }
+
+    el.emptyState.classList.add("hidden");
+
+    if (viewMode === "cards") {
+      el.cardsWrap.classList.remove("hidden");
+      el.tableWrap.classList.add("hidden");
+      renderCards(items);
+    } else {
+      el.cardsWrap.classList.add("hidden");
+      el.tableWrap.classList.remove("hidden");
+      renderTable(items);
+    }
+  }
+
+  // Debounce search
+  function debounce(fn, ms) {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), ms);
+    };
   }
 
   async function load() {
     setLoading(true);
+    el.netBadge.classList.add("hidden");
+    el.netText.textContent = "Cargando…";
 
-    // Cache-busting para evitar cachés agresivas en Pages
-    const url = `${DATA_URL}?t=${Date.now()}`;
+    try {
+      const url = `${DATA_URL}?t=${Date.now()}`;
+      const t0 = performance.now();
+      const res = await fetch(url, { cache: "no-store" });
+      const t1 = performance.now();
 
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`No se pudo cargar stock.json (${res.status})`);
+      if (!res.ok) throw new Error(`No se pudo cargar stock.json (${res.status})`);
 
-    const data = await res.json();
-    rawItems = Array.isArray(data.items) ? data.items : [];
+      const data = await res.json();
+      rawItems = Array.isArray(data.items) ? data.items : [];
 
-    els.lastUpdated.textContent = fmtDate(data.generatedAt);
-    const active = rawItems.filter(x => x.isActive).length;
-    els.activeCount.textContent = String(active);
+      el.lastUpdated.textContent = fmtDate(data.generatedAt);
+      buildCategoryOptions(rawItems);
+      computeKPIs(rawItems);
 
-    buildCategoryOptions(rawItems);
+      el.netBadge.classList.remove("hidden");
+      el.netText.textContent = `OK · ${Math.round(t1 - t0)}ms`;
+      showToast("ok", "Actualizado", "Stock sincronizado correctamente.");
 
-    setLoading(false);
-    applyFilters();
+      // show content
+      el.skeleton.classList.add("hidden");
+      render();
+    } catch (err) {
+      el.skeleton.classList.add("hidden");
+      el.cardsWrap.classList.add("hidden");
+      el.tableWrap.classList.add("hidden");
+      el.emptyState.classList.remove("hidden");
+      el.emptyTitle.textContent = "Error cargando datos";
+      el.emptyDesc.textContent = err?.message || "Error desconocido";
+      el.netText.textContent = "Error";
+      showToast("err", "Error", err?.message || "No se pudo cargar el JSON.");
+    }
   }
 
-  // events
-  els.refreshBtn.addEventListener("click", load);
-  els.searchInput.addEventListener("input", () => applyFilters());
-  els.categorySelect.addEventListener("change", () => applyFilters());
-  els.statusSelect.addEventListener("change", () => applyFilters());
-  els.sortSelect.addEventListener("change", () => applyFilters());
+  // Auto refresh
+  function scheduleAuto() {
+    clearInterval(autoTimer);
+    clearInterval(nextTickTimer);
+    el.nextTick.textContent = "—";
 
-  load().catch(err => {
-    setLoading(false);
-    els.metaInfo.textContent = "Error cargando datos";
-    els.empty.classList.remove("hidden");
-    els.empty.innerHTML = `<div class="text-lg font-semibold">Error</div><div class="mt-1 text-sm text-slate-400">${escapeHtml(err.message)}</div>`;
+    if (!autoOn) return;
+
+    const every = Number(el.autoEvery.value || 600000);
+    nextAt = Date.now() + every;
+
+    autoTimer = setInterval(() => {
+      load();
+      nextAt = Date.now() + every;
+    }, every);
+
+    nextTickTimer = setInterval(() => {
+      const left = Math.max(0, nextAt - Date.now());
+      const mm = Math.floor(left / 60000);
+      const ss = Math.floor((left % 60000) / 1000);
+      el.nextTick.textContent = `Próx: ${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
+    }, 250);
+  }
+
+  function setAuto(on) {
+    autoOn = on;
+    localStorage.setItem("autoOn", on ? "1" : "0");
+    el.autoToggle.textContent = on ? "ON" : "OFF";
+    el.autoToggle.classList.toggle("bg-emerald-500/30", on);
+    el.autoToggle.classList.toggle("border-emerald-400/30", on);
+    el.autoToggle.classList.toggle("text-emerald-200", on);
+    showToast("info", "Auto refresh", on ? "Activado." : "Desactivado.");
+    scheduleAuto();
+  }
+
+  // Export
+  function exportJson() {
+    const data = { generatedAt: new Date().toISOString(), items: rawItems };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "stock-export.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("ok", "Exportado", "Archivo JSON descargado.");
+  }
+
+  // =========================
+  // EVENTS
+  // =========================
+  el.refreshBtn.addEventListener("click", load);
+  el.emptyReload.addEventListener("click", load);
+
+  el.searchInput.addEventListener("input", debounce(() => render(), 150));
+  el.categorySelect.addEventListener("change", render);
+  el.statusSelect.addEventListener("change", render);
+  el.sortSelect.addEventListener("change", render);
+
+  el.viewCards.addEventListener("click", () => setView("cards"));
+  el.viewTable.addEventListener("click", () => setView("table"));
+
+  el.clearFilters.addEventListener("click", () => {
+    el.searchInput.value = "";
+    el.categorySelect.value = "All";
+    el.statusSelect.value = "all";
+    el.sortSelect.value = "updated";
+    showToast("info", "Filtros", "Restablecidos.");
+    render();
   });
+
+  el.exportBtn.addEventListener("click", exportJson);
+
+  el.autoToggle.addEventListener("click", () => setAuto(!autoOn));
+  el.autoEvery.addEventListener("change", () => {
+    if (autoOn) {
+      showToast("info", "Auto refresh", "Intervalo actualizado.");
+      scheduleAuto();
+    }
+  });
+
+  // Init
+  setView(viewMode);
+  setAuto(autoOn);
+  load();
 </script>
 </body>
 </html>
-
-
-
